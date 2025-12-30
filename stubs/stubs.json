@@ -1,0 +1,15 @@
+{
+    "root": "Main.php.stub",
+    "contracts": "Contract.php.stub",
+    "actions": "Actions.php.stub",
+    "services": "Service.php.stub",
+    "providers": "ServiceProvider.php.stub",
+    "models": "Model.php.stub",
+    "events": "Event.php.stub",
+    "listeners": "Listener.php.stub",
+    "js": "App.js.stub",
+    "layouts": "Layout.vue.stub",
+    "components": "Component.vue.stub",
+    "composables": "Composable.js.stub",
+    "tests": "Test.php.stub"
+}

@@ -1,0 +1,14 @@
+[
+    {
+        "module_key": "unnovatebrains.students",
+        "vendor": "unnovatebrains",
+        "levels": [],
+        "is_common": true,
+        "role": "admin",
+        "namespace": "Unnovatebrains\\Common\\Students",
+        "path": "E:\\dev-server\\www\\packages\\schoolpalm-module-sdk\\modules/Unnovatebrains/Common/Students",
+        "manifest": "E:\\dev-server\\www\\packages\\schoolpalm-module-sdk\\modules/Unnovatebrains/Common/Students/manifest.json",
+        "id": 1,
+        "created_at": "2025-12-30 09:26:41"
+    }
+]

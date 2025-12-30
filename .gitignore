@@ -1,0 +1,31 @@
+# Composer
+/vendor/
+/composer.lock
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# IDE files
+.vscode/
+.idea/
+
+# Logs
+*.log
+
+# Temporary files
+*.tmp
+*.swp
+*.swo
+
+# Node modules (if any JS is included)
+node_modules/
+
+# Build artifacts
+dist/
+build/

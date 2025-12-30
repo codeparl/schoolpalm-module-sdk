@@ -1,0 +1,84 @@
+{
+  "name": "Students Management",
+  "icon": "user-graduate",
+  "vendor": "vendora",
+  "module_key": "vendora.students",
+  "description": "Manage student records, enrollment, and academic details.",
+  "author": {
+    "name": "Vendor A Ltd",
+    "email": "support@vendora.com",
+    "website": "https://www.vendora.com"
+  },
+  "version": "1.0.0",
+  "type": "core",
+  "is_protected": false,
+  "dependencies": {
+    "backend": {
+      "spatie/laravel-permission": "^6.0"
+    },
+    "frontend": {
+      "vue": "^3.4"
+    }
+  },
+  "requires": {
+    "modules": {
+      "vendorc.academics": "^2.0.0"
+    }
+  },
+  "provides": [
+    "VendorA\\Students\\Contracts\\StudentsService"
+  ],
+  "entry": {
+    "provider": "VendorA\\Students\\Providers\\StudentsServiceProvider"
+  },
+  "events": [
+    "VendorA\\Students\\Events\\StudentCreated",
+    "VendorA\\Students\\Events\\StudentUpdated"
+  ],
+  "level": [1, 2, 3, 4, 5, 6],
+  "is_common": false,
+  "role": "admin",
+  "resources": {
+    "ui": {
+      "framework": "vue",
+      "tailwind": true,
+      "source_path": "Resources/js"
+    },
+    "assets": "Resources/assets"
+  },
+  "migrations": {
+    "path": "Migrations",
+    "run_on_install": true,
+    "run_on_update": false
+  },
+  "models": {
+    "path": "Models",
+    "namespace": "VendorA\\Students\\Models",
+    "autoload": true
+  },
+  "menus": [
+    {
+      "name": "students",
+      "label": "Students",
+      "icon": "user-graduate",
+      "permission": "view_students",
+      "route": "/students",
+      "description": "Student management menu",
+      "children": []
+    }
+  ],
+  "actions": [
+    {
+      "name": "create_student",
+      "permission": "create_student",
+      "route": "/students/create",
+      "description": "Create a new student"
+    },
+    {
+      "name": "update_student",
+      "permission": "update_student",
+      "route": "/students/update",
+      "description": "Update student records"
+    }
+  ]
+}

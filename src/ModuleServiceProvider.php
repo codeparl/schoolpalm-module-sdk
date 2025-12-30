@@ -1,0 +1,48 @@
+<?php
+
+namespace SchoolPalm\ModuleSDK;
+
+use Illuminate\Support\ServiceProvider;
+use SchoolPalm\ModuleBridge\Support\Bridge;
+use SchoolPalm\ModuleSDK\Core\BaseModule;
+use SchoolPalm\ModuleSDK\Console\GenerateModuleCommand;
+use SchoolPalm\ModuleSDK\Console\GenerateStubMapCommand;
+use SchoolPalm\ModuleSDK\Console\GenerateStubsCommand;
+use SchoolPalm\ModuleSDK\Console\MakeModuleCommand;
+use SchoolPalm\ModuleSDK\Console\RemoveModuleCommand;
+use SchoolPalm\ModuleSDK\Console\ValidateModuleCommand;
+
+class ModuleServiceProvider extends ServiceProvider
+{
+    public function register()
+    {
+        // Merge package config into Laravel app config
+        $this->mergeConfigFrom(
+            __DIR__ . '/../config/schoolpalm.php', // package config path
+            'schoolpalm' // config key
+        );
+
+        // Bind the SDK BaseModule to the Bridge
+        Bridge::bind(BaseModule::class);
+    }
+
+    public function boot(): void
+    {
+        $this->publishes([
+            __DIR__ . '/../config/schoolpalm.php' => config_path('schoolpalm.php'),
+        ], 'schoolpalm-config');
+
+        if ($this->app->runningInConsole()) {
+
+
+            $this->commands([
+                MakeModuleCommand::class,
+                GenerateModuleCommand::class,
+                ValidateModuleCommand::class,
+                RemoveModuleCommand::class,
+                GenerateStubsCommand::class,
+                GenerateStubMapCommand::class
+            ]);
+        }
+    }
+}

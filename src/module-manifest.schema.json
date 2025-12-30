@@ -1,0 +1,327 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "SchoolPalm Module Manifest",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "name",
+    "vendor",
+    "module_key",
+    "description",
+    "version",
+    "type",
+    "menus",
+    "role",
+    "actions"
+  ],
+  "properties": {
+    "name": {
+      "type": "string",
+      "minLength": 1,
+      "$error": {
+        "type": "Module name must be a string",
+        "minLength": "Module name cannot be empty"
+      }
+    },
+    "icon": {
+      "type": ["string", "null"],
+      "default": null,
+      "$error": {
+        "type": "Icon must be a string or null"
+      }
+    },
+    "vendor": {
+      "type": "string",
+      "minLength": 2,
+      "pattern": "^[a-z][a-z0-9_-]*$",
+      "$error": {
+        "type": "Vendor must be a string",
+        "minLength": "Vendor must have at least 2 characters",
+        "pattern": "Vendor name can only contain lowercase letters, numbers, underscores or hyphens, and must start with a letter"
+      }
+    },
+    "module_key": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9_-]*\\.[a-z][a-z0-9_]*$",
+      "$error": {
+        "pattern": "Module key must be in the format 'vendor.module_name', lowercase letters, numbers, underscores, hyphens"
+      }
+    },
+    "description": {
+      "type": "string",
+      "$error": {
+        "type": "Description must be a string"
+      }
+    },
+    "author": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "name": {
+          "type": ["string", "null"],
+          "minLength": 2,
+          "default": null,
+          "$error": {
+            "type": "Author name must be a string or null",
+            "minLength": "Author name must have at least 2 characters if provided"
+          }
+        },
+        "email": {
+          "type": ["string", "null"],
+          "pattern": "^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$",
+          "default": null,
+          "$error": {
+            "pattern": "Author email must be a valid email address"
+          }
+        },
+        "website": {
+          "type": ["string", "null"],
+          "format": "uri",
+          "default": null,
+          "$error": {
+            "format": "Website must be a valid URL"
+          }
+        }
+      }
+    },
+    "version": {
+      "type": "string",
+      "pattern": "^\\d+\\.\\d+\\.\\d+$",
+      "$error": {
+        "pattern": "Version must follow semantic versioning (e.g., 1.0.0)"
+      }
+    },
+    "type": {
+      "type": "string",
+      "enum": ["core", "external"],
+      "$error": {
+        "enum": "Type must be either 'core' or 'external'"
+      }
+    },
+    "is_protected": {
+      "type": "boolean",
+      "default": false,
+      "$error": {
+        "type": "is_protected must be a boolean"
+      }
+    },
+
+
+    "provides": {
+      "type": "array",
+      "default": [],
+      "items": {
+        "type": "string",
+        "pattern": "^[A-Z][A-Za-z0-9_\\\\]+$"
+      },
+      "$error": {
+        "items": "Each provided item must be a valid PHP fully-qualified class name"
+      }
+    },
+
+  "requires": {
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "modules": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "string",
+        "pattern": "^[\\^~]?\\d+\\.\\d+(\\.\\d+)?$"
+      },
+      "default": {}
+    }
+  },
+  "$error": {
+    "type": "requires must be an object with module version strings"
+  }
+},
+
+
+    "entry": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["provider"],
+      "properties": {
+        "provider": {
+          "type": "string",
+          "pattern": "^[A-Z][A-Za-z0-9_\\\\]+$",
+          "$error": {
+            "pattern": "Provider must be a valid fully-qualified class name"
+          }
+        }
+      }
+    },
+
+   "events": {
+  "type": "array",
+  "default": [],
+  "items": {
+    "type": "string",
+    "pattern": "^[A-Z][A-Za-z0-9_\\\\]+$"
+  },
+  "$error": {
+    "type": "events must be an array of valid class names"
+  }
+},
+
+
+      "dependencies": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "backend": {
+          "type": "object",
+          "additionalProperties": { "type": "string" },
+          "default": {},
+          "$error": {
+            "type": "Backend dependencies must be an object with composer version strings"
+          }
+        },
+        "frontend": {
+          "type": "object",
+          "additionalProperties": { "type": "string" },
+          "default": {},
+          "$error": {
+            "type": "Frontend dependencies must be an object with NPM version strings"
+          }
+        }
+      }
+    },
+
+       "level": {
+      "type": "array",
+      "default": [],
+      "uniqueItems": true,
+      "items": { "type": "number" },
+      "$error": {
+        "type": "Levels must be an array of numbers",
+        "items": "Each level must be a valid numeric academic level",
+        "uniqueItems": "Level numbers must be unique"
+      }
+    },
+    "is_common": {
+      "type": "boolean",
+      "default": false,
+      "$error": { "type": "is_common must be a boolean" }
+    },
+    "role": {
+      "type": "string",
+      "default": "admin",
+      "$error": { "type": "Role must be a string" }
+    },
+
+     "resources": {
+      "type": "object",
+      "properties": {
+        "ui": {
+          "type": "object",
+          "properties": {
+            "framework": { "type": "string", "$error": { "type": "UI framework must be a string" } },
+            "tailwind": { "type": "boolean", "$error": { "type": "Tailwind flag must be boolean" } },
+            "source_path": { "type": "string", "$error": { "type": "Source path must be a string" } }
+          }
+        },
+        "assets": { "type": "string", "$error": { "type": "Assets path must be a string" } }
+      }
+    },
+
+      "migrations": {
+      "type": "object",
+      "properties": {
+        "path": { "type": "string", "$error": { "type": "Migration path must be a string" } },
+        "run_on_install": { "type": "boolean", "$error": { "type": "run_on_install must be boolean" } },
+        "run_on_update": { "type": "boolean", "$error": { "type": "run_on_update must be boolean" } }
+      }
+    },
+
+    "models": {
+      "type": "object",
+      "required": ["path", "namespace"],
+      "properties": {
+        "path": {
+          "type": "string",
+          "default": "Models",
+          "$error": { "type": "Model path must be a string" }
+        },
+        "namespace": {
+          "type": "string",
+          "$error": { "type": "Namespace must be a string" }
+        },
+        "autoload": {
+          "type": "boolean",
+          "default": true,
+          "$error": { "type": "Autoload must be boolean" }
+        }
+      }
+    },
+
+       "menus": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "#/definitions/menuItem" },
+      "$error": { "minItems": "At least one menu item must be defined" }
+    },
+
+     "actions": {
+      "type": "array",
+      "additionalProperties": { "$ref": "#/definitions/actionItem" },
+      "default": [],
+      "$error": { "type": "Actions must be an array of valid action items" }
+    }
+  },
+  "allOf": [
+    {
+      "if": { "properties": { "is_common": { "const": false } } },
+      "then": {
+        "required": ["level"],
+        "properties": { "level": { "minItems": 1 } }
+      },
+      "$error": {
+        "required": "Modules that are not common must define at least one academic level",
+        "properties": { "level": "At least one level must be specified for non-common modules" }
+      }
+    }
+  ],
+
+   "definitions": {
+    "menuItem": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "label", "icon", "permission", "route", "children", "description"],
+      "properties": {
+        "name": {
+          "type": "string",
+          "pattern": "^[A-Za-z][A-Za-z0-9_\\.]*$",
+          "$error": {
+            "pattern": "Menu name must start with a letter and contain only letters, numbers, underscores or dots"
+          }
+        },
+        "label": { "type": "string", "minLength": 1, "$error": { "minLength": "Menu label cannot be empty" } },
+        "icon": { "type": "string", "$error": { "type": "Icon must be a string" } },
+        "permission": { "type": "string", "$error": { "type": "Permission must be a string" } },
+        "route": { "type": ["string", "null"], "$error": { "type": "Route must be a string or null" } },
+        "description": { "type": "string", "default": "", "$error": { "type": "Description must be a string" } },
+        "children": { "type": "array", "items": { "$ref": "#/definitions/menuItem" }, "default": [], "$error": { "type": "Children must be an array of menu items" } }
+      }
+    },
+
+    "actionItem": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["permission", "route", "name", "description"],
+      "properties": {
+        "name": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9_\\.]*$",
+          "$error": {
+            "pattern": "Action name must start with a lowercase letter and contain only lowercase letters, numbers, underscores, or dots"
+          }
+        },
+        "permission": { "type": "string", "$error": { "type": "Permission must be a string" } },
+        "route": { "type": "string", "$error": { "type": "Route must be a string" } },
+        "description": { "type": "string", "default": "", "$error": { "type": "Description must be a string" } }
+      }
+    }
+  }
+}

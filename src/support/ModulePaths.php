@@ -1,0 +1,139 @@
+<?php
+
+namespace SchoolPalm\ModuleSDK\Support;
+
+use Illuminate\Support\Facades\File;
+use Illuminate\Support\Str;
+use SchoolPalm\ModuleSDK\Helpers\Helper;
+use SchoolPalm\ModuleSDK\Helpers\AcademicLevelManager;
+
+class ModulePaths
+{
+    /**
+     * Base path for all modules (on filesystem)
+     */
+    public static function modulesBasePath(): string
+    {
+        return config('schoolpalm.modules_path', base_path('modules'));
+    }
+
+    /**
+     * Path to stubs
+     */
+    public static function stubsPath(): string
+    {
+        return __DIR__ . '/../../stubs';
+    }
+
+     public static function stubsMap(): string
+    {
+        return __DIR__ . '/../../stubs/stubs.json';
+    }
+    /**
+     * Path to manifest schema
+     */
+    public static function schemaPath(): string
+    {
+        return __DIR__ . '/../module-manifest.schema.json';
+    }
+
+    public static function moduleRegisterPath(): string
+{
+    return realpath(__DIR__ . '/../../');
+}
+
+public static function registryFile(): string
+{
+    return self::moduleRegisterPath() . '/modules.json';
+}
+
+    /**
+     * Resolve levels for folder/namespace based on rules:
+     * 1. Provided levels → use them
+     * 2. No levels + is_common=false → [0] → folder = Common
+     * 3. No levels + is_common=true → folder = Common
+     */
+    protected static function resolveLevels(?array $levels, bool $isCommon): array
+    {
+        if (!empty($levels)) {
+            return $levels;
+        }
+
+        return $isCommon ? [0] : [0];
+    }
+
+    /**
+     * Module folder path: vendor/level/module
+     */
+    public static function modulePath(string $moduleKey, ?array $levels = null, bool $isCommon = true): string
+    {
+        [$vendor, $module] = explode('.', $moduleKey, 2);
+
+        $resolvedLevels = self::resolveLevels($levels, $isCommon);
+
+        $levelFolder = AcademicLevelManager::joinByCodes($resolvedLevels);
+
+        return self::modulesBasePath()
+            . '/' . Str::studly($vendor)
+            . '/' . $levelFolder
+            . '/' . Helper::moduleFolderName($module);
+    }
+
+    /**
+     * Module PHP namespace: vendor\level\module
+     * NOTE: Excludes the base folder like 'Modules'
+     */
+    public static function moduleNamespace(string $moduleKey, ?array $levels = null, bool $isCommon = true): string
+    {
+        [$vendor, $module] = explode('.', $moduleKey, 2);
+
+        $resolvedLevels = self::resolveLevels($levels, $isCommon);
+
+        $levelFolder = AcademicLevelManager::joinByCodes($resolvedLevels);
+
+        return Str::studly($vendor)
+            . '\\' . $levelFolder
+            . '\\' . Helper::moduleFolderName($module);
+    }
+
+    /**
+     * Namespace for module models
+     */
+    public static function moduleModelsNamespace(string $moduleKey, ?array $levels = null, bool $isCommon = true): string
+    {
+        return self::moduleNamespace($moduleKey, $levels, $isCommon) . '\\Models';
+    }
+
+    /**
+     * Vue/frontend path: vendor/level/role/module
+     */
+    public static function vuePath(
+        string $vendor,
+        string $module,
+        ?array $levels = null,
+        bool $isCommon = true,
+        string $role = 'Admin'
+    ): string {
+        $resolvedLevels = self::resolveLevels($levels, $isCommon);
+
+        $levelFolder = AcademicLevelManager::joinByCodes($resolvedLevels);
+
+        return resource_path(
+            "{$vendor}/{$levelFolder}/{$role}/{$module}"
+        );
+    }
+
+    /**
+     * Check if a module exists on the filesystem
+     *
+     * @param string $moduleKey Full module key (e.g., vendor.module_name)
+     * @param array|null $levels Optional levels
+     * @param bool $isCommon Optional is_common flag
+     * @return bool
+     */
+    public static function moduleExists(string $moduleKey, ?array $levels = null, bool $isCommon = true): bool
+    {
+        $path = self::modulePath($moduleKey, $levels, $isCommon);
+        return File::exists($path);
+    }
+}

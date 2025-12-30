@@ -1,0 +1,28 @@
+<?php
+
+namespace {{ namespace }};
+
+use SchoolPalm\ModuleBridge\Core\Module;
+use {{ namespace }}\Services\{{ singular }}Service;
+use Inertia\Inertia;
+
+class Main extends Module
+{
+    protected $service;
+
+    public function __construct()
+    {
+        parent::__construct();
+        $this->service = new {{ singular }}Service;
+    }
+
+    public function run{{ action }}()
+    {
+        return Inertia::render(
+            $this->componentPath(),
+            [
+                'title' => '{{ module }} Dashboard',
+            ]
+        );
+    }
+}
