@@ -23,16 +23,6 @@
     }
   },
 
-  "repositories": [
-    {
-      "type": "path",
-       "url": "E:/dev-server/www/packages/schoolpalm-module-bridge",
-      "options": {
-        "symlink": true
-      }
-    }
-  ],
-
   "require": {
     "php": "^8.2",
     "illuminate/support": "^12.0",
