@@ -39,12 +39,14 @@
     "illuminate/console": "^12.0",
     "opis/json-schema": "^2.6",
     "inertiajs/inertia-laravel": "^2.0",
-    "schoolpalm/module-bridge": "^2.3"
+    "schoolpalm/module-bridge": "dev-main"
   },
 
   "suggest": {
     "@inertiajs/inertia-vue3": "JS Vue3 adapter for Inertia",
     "vue": "Vue3 for module frontend",
     "quasar": "Quasar framework for UI components"
-  }
+  },
+      "minimum-stability": "dev",
+    "prefer-stable": true
 }
