@@ -4,6 +4,7 @@ namespace SchoolPalm\ModuleSDK\Helpers;
 
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Str;
+use SchoolPalm\ModuleBridge\Support\Helper as BridgeHelper;
 use SchoolPalm\ModuleSDK\Models\Module;
 
 class Helper
@@ -13,23 +14,7 @@ class Helper
      */
     public static function moduleFolderName($module): string
     {
-        if (is_string($module)) {
-            $moduleKey = $module;
-        } elseif (is_array($module) && isset($module['module_key'])) {
-            $moduleKey = $module['module_key'];
-        } else {
-            throw new \InvalidArgumentException('Invalid module parameter provided.');
-        }
-
-        $parts = explode('.', $moduleKey);
-        if (count($parts) > 1) {
-            array_shift($parts);
-        }
-
-        return Str::of(implode(' ', $parts))
-            ->replace(['.', '_', '-'], ' ')
-            ->studly()
-            ->toString();
+       return BridgeHelper::moduleFolderName($module);
     }
 
     /**
@@ -37,38 +22,42 @@ class Helper
      */
     public static function roleFolderName(string $role): string
     {
-        return Str::of($role)
-            ->replace(['-', '_'], ' ')
-            ->title()
-            ->replace(' ', '')
-            ->toString();
+        return BridgeHelper::roleFolderName($role);
     }
 
     /**
      * Convert multiple levels into combined folder string
      */
-    public static function levelsFolderName(array $levels): string
-    {
-        if (count($levels) === 1) {
-            return Str::studly($levels[0]);
-        }
 
-        return implode('', array_map(
-            fn($levelName) => config('school.academic_level_codes')[$levelName] ?? substr($levelName, 0, 3),
-            $levels
-        ));
+public static function levelsFolderName(array $levels): string
+{
+    // Handle common module
+    if (empty($levels) || in_array(0, $levels, true)) {
+        return 'Common';
     }
+
+    // Single level → StudlyCase label OR code
+    if (count($levels) === 1) {
+        $level = AcademicLevelManager::getByNumber((int) $levels[0]);
+
+        return $level
+            ? Str::studly($level['code'])
+            : 'Common';
+    }
+
+    // Multiple levels → Join by codes
+    return AcademicLevelManager::joinByCodes(
+        array_map('intval', $levels)
+    );
+}
+
 
     /**
      * Check if a specific school level exists in a combined levels folder string
      */
     public static function levelExists(string $level, string $folderName): bool
     {
-        $levelCodes = config('school.academic_level_codes', []);
-        if (!isset($levelCodes[$level])) {
-            return false;
-        }
-        return Str::contains($folderName, $levelCodes[$level]);
+        return AcademicLevelManager::levelExists($level,$folderName);
     }
 
     /**
@@ -95,54 +84,25 @@ class Helper
      */
     public static function levelByKey($index)
     {
-        return config('school.academic_level')[$index] ?? null;
+        return AcademicLevelManager::getByNumber($index)['code'];
     }
 
 
     public static function loadJson(string $file): ?array
     {
-        if (!File::exists($file)) return null;
-        $content = File::get($file);
-        return json_decode($content, true);
+        return BridgeHelper::loadJson($file);
     }
 
 
 
     public static   function getRouteSegment(string $key, bool $ref = false, $path = null): ?string
     {
-        $request = request();
-
-        // Get segments array
-        if ($ref) {
-            $referer = $request->headers->get('referer');
-            if ($referer) {
-                // Parse path and split into segments
-                $segments = array_values(array_filter(explode('/', parse_url($referer, PHP_URL_PATH))));
-            } else {
-                $segments = [];
-            }
-        } else {
-            $segments = $request->segments();
-        }
-
-        if ($path)
-            $segments = explode('/', trim($path, '/'));
-
-        // Map keys to segment index
-        $map = ['portal' => 0, 'module' => 1, 'action' => 2, 'id' => 3];
-
-        if (!isset($map[$key])) {
-            return null;
-        }
-
-        return $segments[$map[$key]] ?? null;
+        return BridgeHelper::getPathSegment($key,$ref);
     }
 
 
   public static  function normalizeModuleName(string $module): ?string
 {
-    if (str_contains($module, '-'))
-        $module = preg_replace('/-+/', ' ', $module);
-    return Str::studly($module);
+  return   BridgeHelper::normalizeModuleName($module);
 }
 }

@@ -5,6 +5,7 @@ namespace SchoolPalm\ModuleSDK\Console;
 use Illuminate\Support\Facades\File;
 use SchoolPalm\ModuleSDK\Manifest\ManifestValidator;
 use SchoolPalm\ModuleSDK\Manifest\ManifestFactory;
+use SchoolPalm\ModuleSDK\ModuleSDKServiceProvider;
 
 class ValidateModuleCommand extends ModuleCommandBase
 {
@@ -14,11 +15,13 @@ class ValidateModuleCommand extends ModuleCommandBase
     public function handle(): int
     {
         // Let user choose a module from registry
+        dump( ModuleSDKServiceProvider::$academicLevels);
         $module = $this->chooseModule();
         if (!$module) {
             $this->error('Module not found in registry.');
             return self::FAILURE;
         }
+
 
         $manifestFile = $module['manifest'];
 

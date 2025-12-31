@@ -12,6 +12,8 @@ use SchoolPalm\ModuleSDK\Console\MakeModuleCommand;
 use SchoolPalm\ModuleSDK\Console\RemoveModuleCommand;
 use SchoolPalm\ModuleSDK\Console\ValidateModuleCommand;
 use SchoolPalm\ModuleBridge\Support\EncryptedConfig;
+use SchoolPalm\ModuleBridge\Support\Helper as BridgeHelper;
+
 class ModuleSDKServiceProvider extends ServiceProvider
 {
     public static array $academicLevels = [];
@@ -28,7 +30,7 @@ class ModuleSDKServiceProvider extends ServiceProvider
           
         // Load and cache academic levels once
         EncryptedConfig::init();
-        self::$academicLevels = EncryptedConfig::read('academic_levels');
+        self::$academicLevels = BridgeHelper::getAcademicLevels();
     }
 
     public function boot(): void
