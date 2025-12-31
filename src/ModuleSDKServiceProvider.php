@@ -30,7 +30,7 @@ class ModuleSDKServiceProvider extends ServiceProvider
           
         // Load and cache academic levels once
         EncryptedConfig::init();
-        self::$academicLevels = BridgeHelper::getAcademicLevels();
+        self::$academicLevels =  BridgeHelper::getAcademicLevels();
     }
 
     public function boot(): void
