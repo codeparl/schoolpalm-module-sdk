@@ -22,9 +22,10 @@ This SDK provides tools and scaffolding for creating SchoolPalm modules. It incl
 
 ### Console Commands
 
-- `php artisan module:make <name>` - Create a new module
-- `php artisan module:generate-stubs` - Generate stubs for module development
-- `php artisan module:validate <path>` - Validate a module manifest
+1. `php artisan sp:make-m <name>` – Create a new module
+2. `php artisan sp:validate-m` – Validate a module manifest
+3. `php artisan sp:gen-s` – Generate folder structure for module development
+4. `php artisan sp:stub` – Generate all stubs
 
 ### Module Structure
 

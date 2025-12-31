@@ -2,7 +2,7 @@
 
 namespace SchoolPalm\ModuleSDK\Helpers;
 
-use Illuminate\Support\Facades\Config;
+use SchoolPalm\ModuleBridge\Support\Helper as BridgeHelper;
 
 class AcademicLevelManager
 {
@@ -13,10 +13,10 @@ class AcademicLevelManager
      */
     public static function all(): array
     {
-        return Config::get('schoolpalm.academic_levels', []);
+    return BridgeHelper::getAcademicLevels();
     }
 
-    /**
+    /*
      * Get level by number
      *
      * @param int $number

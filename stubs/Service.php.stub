@@ -1,16 +1,16 @@
 <?php
 
-namespace {{namespace}}\Services;
+namespace {{ namespace }}\Services;
 
-class {{serviceClass}}
+class {{ className }}
 {
     /**
      * Example CRUD methods
      */
 
-    public function store(array \$data) {}
-    public function update(\$id, array \$data) {}
-    public function delete(\$id) {}
+    public function store(array $data) {}
+    public function update($id, array $data) {}
+    public function delete($id) {}
     public function all() {}
-    public function find(\$id) {}
+    public function find($id) {}
 }

@@ -48,6 +48,7 @@ class MakeModuleCommand extends ModuleCommandBase
         $normalized = Str::slug($name, '_');
         $moduleKey  = $vendor . '.' . $normalized;
         $levels     = $config['defaults']['levels'];
+        $is_common     = $config['defaults']['is_common'];
 
         /* -------------------------------------------------------------
          | Build manifest input
@@ -57,6 +58,8 @@ class MakeModuleCommand extends ModuleCommandBase
             'module_key'  => $moduleKey,
             'description' => '',
             'role'        => $role,
+            'level'=>$levels,
+            'is_common'=>$is_common
 
         ];
 

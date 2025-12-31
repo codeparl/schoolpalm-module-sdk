@@ -6,7 +6,7 @@ use Illuminate\Support\Facades\File;
 use SchoolPalm\ModuleSDK\Core\ModuleRegistry;
 use SchoolPalm\ModuleSDK\Helpers\Helper;
 use SchoolPalm\ModuleSDK\Support\ModulePaths;
-
+use Illuminate\Support\Str;
 class GenerateStubsCommand extends ModuleCommandBase
 {
     protected $signature = 'sp:stub';
@@ -59,7 +59,7 @@ class GenerateStubsCommand extends ModuleCommandBase
                 'singular' => $moduleStructure['singular'],
                 'namespace'  => $moduleStructure['namespace'],
                 'action'  => $moduleStructure['module'],
-                'className'  => ucfirst($key),
+                'className'  => $moduleStructure['singular'].Str::singular(ucfirst($key)),
             ]);
 
             $this->info("Created stub for {$key}: {$targetPath}");

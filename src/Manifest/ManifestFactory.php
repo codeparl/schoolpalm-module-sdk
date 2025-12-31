@@ -4,6 +4,7 @@ namespace SchoolPalm\ModuleSDK\Manifest;
 
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\File;
+use SchoolPalm\ModuleBridge\Support\Helper as SupportHelper;
 use SchoolPalm\ModuleSDK\Helpers\Helper;
 use SchoolPalm\ModuleSDK\Support\ModulePaths;
 
@@ -23,7 +24,11 @@ class ManifestFactory
         $isCommon    = $data['is_common'] ?? true;
         $level       = $data['level'] ?? [];
 
+        if ($isCommon && !empty($level)) $isCommon =false;
+
         if (!$isCommon && empty($level)) $level = [0];
+
+        
 
         $levelSegment = Helper::levelsFolderName($level);
         $moduleName   = Helper::moduleFolderName($name);
@@ -213,21 +218,7 @@ public  static function  loadManifest(string $filePath): ?array
     if (!file_exists($filePath)) {
         return null;
     }
-
-    $jsonContent = file_get_contents($filePath);
-    if (!$jsonContent) {
-        // Empty file or read error
-        return null;
-    }
-
-    $data = json_decode($jsonContent, true);
-
-    if (json_last_error() !== JSON_ERROR_NONE) {
-        // JSON parsing failed
-        return null;
-    }
-
-    return $data;
+    return SupportHelper::loadJson($filePath);
 }
 
 

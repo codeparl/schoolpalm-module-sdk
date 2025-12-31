@@ -4,7 +4,9 @@ namespace SchoolPalm\ModuleSDK\Http;
 
 use Illuminate\Http\Request;
 use Inertia\Inertia;
-use SchoolPalm\ModuleSDK\Core\VendorBaseModule;
+use SchoolPalm\ModuleSDK\Core\BaseModule;
+use SchoolPalm\ModuleSDK\Core\ModuleRegistry;
+use SchoolPalm\ModuleSDK\Helpers\Helper;
 use SchoolPalm\ModuleSDK\Resolvers\ModuleResolver;
 
 /**
@@ -15,74 +17,106 @@ use SchoolPalm\ModuleSDK\Resolvers\ModuleResolver;
  * Responsibilities:
  * - Detect the current module from the route
  * - Initialize the module’s main class
- * - Perform actions dynamically via VendorBaseModule
+ * - Perform actions dynamically via BaseModule
  * - Return JSON for AJAX requests or the result for normal requests
  * - Render dashboard component
  */
 class ModuleController
 {
-    /** @var VendorBaseModule|null The currently loaded module instance */
-    private ?VendorBaseModule $module = null;
+    /** @var BaseModule|null The currently loaded module instance */
+    private ?BaseModule $module = null;
 
     /** @var string|null Current module name from route */
-    private ?string $moduleName;
+    private ?string $moduleName = null;
 
     /**
-     * Constructor
+     * ModuleController constructor.
      *
-     * Initializes the module based on the route and resolver.
+     * Only stores the module name; actual module resolution is lazy.
      */
     public function __construct()
     {
-        $this->moduleName = VendorBaseModule::normalizeModuleName(
-            VendorBaseModule::getRouteSegment('module')
+        $this->moduleName = Helper::normalizeModuleName(
+            Helper::getRouteSegment('module')
         );
-
-        $resolver = new ModuleResolver([]); // Optionally, inject registry array
-
-        if ($this->moduleName) {
-            $moduleClass = $resolver->resolveModuleMainClass($this->moduleName);
-
-            if ($moduleClass && class_exists($moduleClass)) {
-                // Instantiate module with resolver
-                $this->module = app($moduleClass, ['resolver' => $resolver]);
-            }
-        }
     }
 
     /**
-     * Handle module routes dynamically
+     * Lazy-load and initialize the module
+     *
+     * @return BaseModule|null
+     */
+    private function resolveModule(): ?BaseModule
+    {
+        if ($this->module !== null) {
+            return $this->module;
+        }
+
+        if (! $this->moduleName) {
+            // No module requested; return null to fallback to dashboard
+            return null;
+        }
+
+        $context = [
+            'portal'     => Helper::getRouteSegment('portal'),
+            'moduleName' => $this->moduleName,
+            'action'     => Helper::getRouteSegment('action'),
+            'id'         => Helper::getRouteSegment('id'),
+        ];
+
+        $baseModule = new BaseModule($context);
+
+        // Inject resolver
+        $resolver = new ModuleResolver(app(ModuleRegistry::class)->all());
+        $baseModule->setResolver($resolver);
+
+        // Set module to baseModule; child module will handle its own execution
+        $this->module = $baseModule;
+
+        return $this->module;
+    }
+
+    /**
+     * Handle dynamic module routes
      *
      * @param Request $request
      * @return mixed
-     *
-     * - Delegates the request to VendorBaseModule->performAction()
-     * - Returns JSON if AJAX, otherwise the normal response
      */
     public function handle(Request $request)
     {
-        if ($this->module !== null) {
-            $result = $this->module->performAction();
+        $module = $this->resolveModule();
 
-            if ($request->ajax() || $request->wantsJson()) {
-                return $result;
-            }
-
-            return $result;
+        if ($module === null) {
+            // No module requested; just render dashboard
+            return $this->dashboard();
         }
 
-        abort(404, 'Resource or Module not found');
+        $result = $module->performAction();
+
+        if ($request->ajax() || $request->wantsJson()) {
+            return response()->json($result);
+        }
+
+        return $result;
     }
 
     /**
      * Render the portal/dashboard component
      *
-     * Uses Inertia to render a default dashboard page.
-     *
      * @return \Inertia\Response
      */
     public function dashboard()
     {
-        return Inertia::render(ModuleResolver::resolveDashboard());
+        $module = $this->resolveModule();
+
+        // Even if module is null, create a temporary BaseModule with resolver for dashboard
+        if ($module === null) {
+            $module = new BaseModule(['portal' => Helper::getRouteSegment('portal')]);
+            $module->setResolver(new ModuleResolver(app(ModuleRegistry::class)->all()));
+        }
+
+        return Inertia::render(
+            $module->getResolver()->resolveDashboard()
+        );
     }
 }

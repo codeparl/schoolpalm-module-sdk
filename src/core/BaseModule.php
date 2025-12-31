@@ -40,7 +40,7 @@ class BaseModule extends AbstractModule
      *
      * @var ResolverContract
      */
-    protected ResolverContract $resolver;
+    protected ?ResolverContract $resolver;
 
     /**
      * VendorBaseModule constructor.
@@ -48,16 +48,48 @@ class BaseModule extends AbstractModule
      * @param ResolverContract $resolver Resolver used to locate module files and components
      * @param array<string, mixed> $context Execution context injected by SDK
      */
-    public function __construct(ResolverContract $resolver, array $context = [])
+    public function __construct(array $context = [])
     {
-        $this->resolver = $resolver;
-
         // Inject runtime context (portal, moduleName, action, id)
         $this->setContext($context);
 
-        // Load action handlers
-        $this->loadModules();
     }
+
+
+    /**
+ * Set the resolver implementation.
+ *
+ * @param ResolverContract $resolver
+ * @return $this
+ */
+public function setResolver(ResolverContract $resolver): static
+{
+    $this->resolver = $resolver;
+
+    // Now that resolver exists, we can load actions safely
+    $this->loadModules();
+
+    return $this;
+}
+
+/**
+ * Get the resolver implementation.
+ *
+ * @return ResolverContract
+ */
+public function getResolver(): ResolverContract
+{
+    if (! isset($this->resolver)) {
+        throw new \RuntimeException(
+            'Resolver has not been set on the module.'
+        );
+    }
+
+    return $this->resolver;
+}
+
+
+
 
     /* -----------------------------------------------------------------
      |  Execution Pipeline

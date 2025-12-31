@@ -4,6 +4,7 @@ namespace SchoolPalm\ModuleSDK\Resolvers;
 
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Str;
+use SchoolPalm\ModuleBridge\Contracts\ResolverContract;
 
 /**
  * Class ModuleResolver
@@ -22,7 +23,7 @@ use Illuminate\Support\Str;
  *
  * @package SchoolPalm\ModuleSDK\Resolvers
  */
-class ModuleResolver
+class ModuleResolver implements ResolverContract
 {
     /**
      * Module registry
@@ -198,7 +199,7 @@ class ModuleResolver
      *
      * @return string
      */
-    public static function resolveDashboard(): string
+    public  function resolveDashboard(): string
     {
         return 'Dashboard/Index';
     }

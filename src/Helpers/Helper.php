@@ -17,7 +17,7 @@ class Helper
             $moduleKey = $module;
         } elseif (is_array($module) && isset($module['module_key'])) {
             $moduleKey = $module['module_key'];
-        }  else {
+        } else {
             throw new \InvalidArgumentException('Invalid module parameter provided.');
         }
 
@@ -74,7 +74,7 @@ class Helper
     /**
      * Generate the PHP namespace for a module
      */
-    public static function moduleNamespace(Module $module, string|null $level = null): string
+    public static function moduleNamespace($module, string|null $level = null): string
     {
         $moduleName = Str::studly(self::moduleFolderName($module));
         $vendorName = Str::studly($module->vendor);
@@ -99,10 +99,50 @@ class Helper
     }
 
 
-     public static function loadJson(string $file): ?array
+    public static function loadJson(string $file): ?array
     {
         if (!File::exists($file)) return null;
         $content = File::get($file);
         return json_decode($content, true);
     }
+
+
+
+    public static   function getRouteSegment(string $key, bool $ref = false, $path = null): ?string
+    {
+        $request = request();
+
+        // Get segments array
+        if ($ref) {
+            $referer = $request->headers->get('referer');
+            if ($referer) {
+                // Parse path and split into segments
+                $segments = array_values(array_filter(explode('/', parse_url($referer, PHP_URL_PATH))));
+            } else {
+                $segments = [];
+            }
+        } else {
+            $segments = $request->segments();
+        }
+
+        if ($path)
+            $segments = explode('/', trim($path, '/'));
+
+        // Map keys to segment index
+        $map = ['portal' => 0, 'module' => 1, 'action' => 2, 'id' => 3];
+
+        if (!isset($map[$key])) {
+            return null;
+        }
+
+        return $segments[$map[$key]] ?? null;
+    }
+
+
+  public static  function normalizeModuleName(string $module): ?string
+{
+    if (str_contains($module, '-'))
+        $module = preg_replace('/-+/', ' ', $module);
+    return Str::studly($module);
+}
 }

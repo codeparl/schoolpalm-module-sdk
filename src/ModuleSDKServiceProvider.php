@@ -11,19 +11,24 @@ use SchoolPalm\ModuleSDK\Console\GenerateStubsCommand;
 use SchoolPalm\ModuleSDK\Console\MakeModuleCommand;
 use SchoolPalm\ModuleSDK\Console\RemoveModuleCommand;
 use SchoolPalm\ModuleSDK\Console\ValidateModuleCommand;
-
-class ModuleServiceProvider extends ServiceProvider
+use SchoolPalm\ModuleBridge\Support\EncryptedConfig;
+class ModuleSDKServiceProvider extends ServiceProvider
 {
+    public static array $academicLevels = [];
     public function register()
     {
         // Merge package config into Laravel app config
         $this->mergeConfigFrom(
-            __DIR__ . '/../config/schoolpalm.php', // package config path
-            'schoolpalm' // config key
+            __DIR__ . '/../config/schoolpalm.php', 
+            'schoolpalm' 
         );
 
         // Bind the SDK BaseModule to the Bridge
         Bridge::bind(BaseModule::class);
+          
+        // Load and cache academic levels once
+        EncryptedConfig::init();
+        self::$academicLevels = EncryptedConfig::read('academic_levels');
     }
 
     public function boot(): void
