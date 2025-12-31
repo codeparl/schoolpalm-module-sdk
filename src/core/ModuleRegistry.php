@@ -115,6 +115,7 @@ class ModuleRegistry
     /** Register a new module */
     public function register(array $moduleData): void
     {
+        dump($moduleData, $this->registryPath);
         $modules = array_values($this->modules);
 
         if ($this->exists($moduleData['module_key'])) return;
