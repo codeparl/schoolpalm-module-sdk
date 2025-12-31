@@ -28,7 +28,7 @@ class ModuleSDKServiceProvider extends ServiceProvider
         // Bind the SDK BaseModule to the Bridge
         Bridge::bind(BaseModule::class);
           
-        // Load and cache academic levels once
+        // Load and cache academic levels 
         EncryptedConfig::init();
         self::$academicLevels =  BridgeHelper::getAcademicLevels();
     }
