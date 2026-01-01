@@ -5,6 +5,7 @@ namespace SchoolPalm\ModuleSDK\Core;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Str;
+use SchoolPalm\ModuleBridge\Support\Helper;
 use SchoolPalm\ModuleSDK\Support\ModulePaths;
 
 /**
@@ -34,7 +35,6 @@ class ModuleRegistry
         if (!File::exists($this->registryPath)) {
             throw new \RuntimeException("Module registry not found at {$this->registryPath}");
         }
-
         $this->modules = Cache::remember(
             'schoolpalm.modules.registry',
             now()->addMinutes(10),
@@ -47,11 +47,11 @@ class ModuleRegistry
      */
     protected function parse(): array
     {
-        $data = json_decode(File::get($this->registryPath), true, flags: JSON_THROW_ON_ERROR);
+        $data = Helper::loadJson($this->registryPath);
 
-        return collect($data)
+       return  collect($data)
             ->map(fn ($entry) => $this->normalize($entry))
-            ->keyBy('module_key')
+           ->values() 
             ->toArray();
     }
 
@@ -95,7 +95,8 @@ class ModuleRegistry
 
         return $this->modules[$key]
             ?? collect($this->modules)->first(fn ($m) => $m['module'] === Str::studly($module));
-    }
+    
+        }
 
     /** @return array */
     public function require(string $module): array
@@ -115,7 +116,6 @@ class ModuleRegistry
     /** Register a new module */
     public function register(array $moduleData): void
     {
-        dump($moduleData, $this->registryPath);
         $modules = array_values($this->modules);
 
         if ($this->exists($moduleData['module_key'])) return;

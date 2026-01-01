@@ -25,6 +25,12 @@ class ModulePaths
         return __DIR__ . '/../../stubs';
     }
 
+      public static function basePath(string $path=''): string
+    {
+        return realpath(__DIR__ . '/../').'/'.$path;
+    }
+
+
      public static function stubsMap(): string
     {
         return __DIR__ . '/../../stubs/stubs.json';

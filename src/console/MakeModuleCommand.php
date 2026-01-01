@@ -5,11 +5,12 @@ namespace SchoolPalm\ModuleSDK\Console;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Str;
+use SchoolPalm\ModuleBridge\Support\Helper;
+use SchoolPalm\ModuleBridge\Core\CreatedModuleRegistry;
 use SchoolPalm\ModuleSDK\Core\ModuleRegistry;
 use SchoolPalm\ModuleSDK\Manifest\ManifestFactory;
 use SchoolPalm\ModuleSDK\Support\ModulePaths;
 use SchoolPalm\ModuleSDK\Manifest\ManifestValidator;
-
 class MakeModuleCommand extends ModuleCommandBase
 {
     protected $signature = 'sp:make-m {name?}';
@@ -93,15 +94,13 @@ class MakeModuleCommand extends ModuleCommandBase
         /* -------------------------------------------------------------
          | Write manifest.json
          |-------------------------------------------------------------*/
-        File::put(
-            "{$modulePath}/manifest.json",
-            json_encode($manifest, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES)
-        );
+        Helper::storeJson('manifest',$manifest,$modulePath);
 
               /* -------------------------------------------------------------
          | Register module in package registry
          |-------------------------------------------------------------*/
-         app(ModuleRegistry::class)->register([
+        $register  = new CreatedModuleRegistry(ModulePaths::registryFile());
+         $data = [
             'module_key' => $manifest['module_key'],
             'vendor'     => $manifest['vendor'],
             'levels'     => $manifest['level'] ?: [],
@@ -109,9 +108,12 @@ class MakeModuleCommand extends ModuleCommandBase
             'role'     => $manifest['role'],
             'namespace'  => ModulePaths::moduleNamespace($manifest['module_key'], $manifest['level']),
             'path'       => $modulePath,
-            'manifest'   => $modulePath . '/manifest.json',
-        ]);
+            'manifest'   => $modulePath . '/manifest.json'];
 
+            $data['folder']= Helper::levelFolder($data['namespace']);
+        
+        $register ->register($data );
+        $register->clearCache();
 
         $this->info("✅ Module [{$manifest['module_key']}] created successfully");
         $this->line("📁 Location: {$modulePath}");

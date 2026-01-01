@@ -15,37 +15,36 @@ class ValidateModuleCommand extends ModuleCommandBase
     public function handle(): int
     {
         // Let user choose a module from registry
-        print_r( ModuleSDKServiceProvider::$academicLevels);
 
-        // $module = $this->chooseModule();
-        // if (!$module) {
-        //     $this->error('Module not found in registry.');
-        //     return self::FAILURE;
-        // }
-
-
-        // $manifestFile = $module['manifest'];
-
-        // if (!File::exists($manifestFile)) {
-        //     $this->error("manifest.json not found at: {$manifestFile}");
-        //     return self::FAILURE;
-        // }
-
-        // $manifest = ManifestFactory::loadManifest($manifestFile);
+        $module = $this->chooseModule();
+        if (!$module) {
+            $this->error('Module not found in registry.');
+            return self::FAILURE;
+        }
 
 
-        // if ($manifest === null) {
-        //     $this->error("Failed to parse manifest.json. Invalid JSON.");
-        //     return self::FAILURE;
-        // }
+        $manifestFile = $module['manifest'];
 
-        //    $success = ManifestValidator::validate($manifest, $this);
+        if (!File::exists($manifestFile)) {
+            $this->error("manifest.json not found at: {$manifestFile}");
+            return self::FAILURE;
+        }
+
+        $manifest = ManifestFactory::loadManifest($manifestFile);
 
 
-        // if ($success) {
-        //     $this->info("✔ manifest.json is valid according to the schema.");
-        //     return self::SUCCESS;
-        // }
+        if ($manifest === null) {
+            $this->error("Failed to parse manifest.json. Invalid JSON.");
+            return self::FAILURE;
+        }
+
+           $success = ManifestValidator::validate($manifest, $this);
+
+
+        if ($success) {
+            $this->info("✔ manifest.json is valid according to the schema.");
+            return self::SUCCESS;
+        }
 
 
 

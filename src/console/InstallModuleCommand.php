@@ -1,35 +1,37 @@
 <?php
-class InstallModuleCommand extends Command
+
+namespace SchoolPalm\ModuleSDK\Console;
+
+use Illuminate\Support\Facades\File;
+use SchoolPalm\ModuleSDK\Core\ModuleRegistry;
+use SchoolPalm\ModuleSDK\Helpers\ModuleInstaller;
+
+class installModuleCommand  extends ModuleCommandBase
 {
-    protected $signature = 'sp:install-m {module}';
-    protected $description = 'Install a module into the host Laravel app';
+    protected $signature = 'sp:install';
+    protected $description = 'install  module';
 
-    public function handle()
+    protected ModuleRegistry $registry;
+
+    public function handle(): int
     {
-        $moduleName = $this->argument('module');
+        /* -------------------------------------------------------------
+         | Choose module from registry
+         |-------------------------------------------------------------*/
+        //  $module = $this->chooseModule();
+        // if (!$module) {
+        //     $this->error('Module not found in registry.');
+        //     return self::FAILURE;
+        // }
 
-        // 1. Validate module exists in Modules folder
-        $modulePath = base_path("Modules/{$moduleName}");
-        if (!is_dir($modulePath)) {
-            $this->error("Module {$moduleName} not found.");
-            return;
-        }
+$this->info("copying vendor routes to app routes...");
+        ModuleInstaller::make()
+        ->ensureInstallPaths()
+        ->installRoutes();
+    
+        $this->info("Routes copied successfully");
 
-        // 2. Read manifest.json
-        $manifest = Helper::loadJson($modulePath . '/manifest.json');
-
-        // 3. Copy files into host app (resources/views, public, config)
-        $this->publishModuleFiles($modulePath, $manifest);
-
-        // 4. Install Composer dependencies if defined
-        $this->installDependencies($manifest['dependencies'] ?? []);
-
-        // 5. Run migrations if any
-        $this->runMigrations($manifest['migrations'] ?? []);
-
-        // 6. Register module in SDK runtime
-        ModuleRegistry::register($manifest['module_key'], $manifest);
-
-        $this->info("Module {$moduleName} installed successfully.");
+       
+        return self::SUCCESS;
     }
 }

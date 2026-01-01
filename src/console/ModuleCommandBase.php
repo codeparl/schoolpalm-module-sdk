@@ -18,6 +18,10 @@ class ModuleCommandBase extends Command
 
         $register  = app(ModuleRegistry::class);
        $choices = $register->listForCLI();
+        if (empty($choices)) {
+            $this->error('No modules found, create new modules.');
+            return [];
+        }
         // Ask the user to select
         $selectedNamespace = $this->choice(
             'Select a module',

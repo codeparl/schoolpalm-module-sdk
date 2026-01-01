@@ -13,6 +13,8 @@ use SchoolPalm\ModuleSDK\Console\RemoveModuleCommand;
 use SchoolPalm\ModuleSDK\Console\ValidateModuleCommand;
 use SchoolPalm\ModuleBridge\Support\EncryptedConfig;
 use SchoolPalm\ModuleBridge\Support\Helper as BridgeHelper;
+use SchoolPalm\ModuleSDK\Console\installModuleCommand;
+use SchoolPalm\ModuleSDK\Console\RemoveAllModuleCommand;
 
 class ModuleSDKServiceProvider extends ServiceProvider
 {
@@ -48,7 +50,9 @@ class ModuleSDKServiceProvider extends ServiceProvider
                 ValidateModuleCommand::class,
                 RemoveModuleCommand::class,
                 GenerateStubsCommand::class,
-                GenerateStubMapCommand::class
+                GenerateStubMapCommand::class,
+                installModuleCommand::class,
+                RemoveAllModuleCommand::class
             ]);
         }
     }

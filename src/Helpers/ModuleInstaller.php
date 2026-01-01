@@ -3,130 +3,218 @@
 namespace SchoolPalm\ModuleSDK\Helpers;
 
 use Illuminate\Support\Facades\File;
+use SchoolPalm\ModuleSDK\Core\ModuleRegistry;
+use SchoolPalm\ModuleSDK\Support\ModulePaths;
 
 class ModuleInstaller
 {
-    /**
-     * Install a module into the host Laravel app.
-     *
-     * Copies the module's vendor routes file into the host app's routes folder.
-     *
-     * @param string $moduleName The module folder name inside SDK (e.g., 'Students')
-     * @param string|null $sourceBase Optional: base path of SDK modules (default: base_path('modules'))
-     * @param string|null $destBase Optional: base path in host app (default: base_path('routes'))
-     *
-     * @return bool True if file was copied successfully, false otherwise
-     */
-    public static function installRoutes(string $moduleName, ?string $sourceBase = null, ?string $destBase = null): bool
-    {
-        $sourceBase = $sourceBase ?? base_path('modules');
-        $destBase   = $destBase ?? base_path('routes');
-
-        $sourceFile = rtrim($sourceBase, DIRECTORY_SEPARATOR)
-            . DIRECTORY_SEPARATOR
-            . $moduleName
-            . DIRECTORY_SEPARATOR
-            . 'vendor_routes.php';
-
-        if (! File::exists($sourceFile)) {
-            return false;
-        }
-
-        $destFile = rtrim($destBase, DIRECTORY_SEPARATOR)
-            . DIRECTORY_SEPARATOR
-            . strtolower($moduleName) . '_routes.php';
-
-        // Ensure destination folder exists
-        if (! File::isDirectory($destBase)) {
-            File::makeDirectory($destBase, 0777, true);
-        }
-
-        return File::copy($sourceFile, $destFile);
-    }
-
-
-
-       /**
-     * Install a module into the host Laravel app.
-     *
-     * Copies the module's vendor routes file into the host app's routes folder
-     * and updates the registry flag `installed: true`.
-     *
-     * @param array  $module         Module registry item
-     * @param string $hostRoutesPath Host app routes folder
-     *
-     * @return bool True on success, false otherwise
-     */
-   public static function installModule(array &$module, string $hostRoutesPath, bool $overwrite = true): bool
-{
-    $modulePath = rtrim($module['path'], DIRECTORY_SEPARATOR);
-    $sourceFile = $modulePath . DIRECTORY_SEPARATOR . 'vendor_routes.php';
-
-    if (! is_file($sourceFile)) {
-        return false;
-    }
-
-    $destFile = rtrim($hostRoutesPath, DIRECTORY_SEPARATOR)
-        . DIRECTORY_SEPARATOR
-        . strtolower($module['module_key']) . '_routes.php';
-
-    if (! is_dir($hostRoutesPath) && ! mkdir($hostRoutesPath, 0755, true) && ! is_dir($hostRoutesPath)) {
-        return false;
-    }
-
-    if (file_exists($destFile) && ! $overwrite) {
-        return true; // already installed, skip
-    }
-
-    if (! copy($sourceFile, $destFile)) {
-        return false;
-    }
-
-    $module['installed'] = true;
-    return true;
-}
-
+    protected array $module = [];
+    protected array $createdModules = [];
+    protected string $hostRoutesPath = '';
+    protected bool $overwrite = true;
+    protected ModuleRegistry $registry;
 
     /**
-     * Uninstall a module from the host Laravel app.
-     *
-     * Removes the copied routes file and updates the registry flag `installed: false`.
-     *
-     * @param array  $module         Module registry item
-     * @param string $hostRoutesPath Host app routes folder
-     *
-     * @return bool True if file removed successfully or does not exist, false otherwise
+     * Create a new installer instance (entry point for chaining)
      */
-    public static function uninstallModule(array &$module, string $hostRoutesPath): bool
+    public static function make(): self
     {
-        $destFile = rtrim($hostRoutesPath, DIRECTORY_SEPARATOR)
-            . DIRECTORY_SEPARATOR
-            . strtolower($module['module_key']) . '_routes.php';
+        return new self();
+    }
 
-        if (is_file($destFile)) {
-            if (! unlink($destFile)) {
-                return false;
+    public function __construct()
+    {
+        $this->registry = new ModuleRegistry();
+        $this->loadCreatedModules();
+    }
+
+    /**
+     * Load all recorded SDK modules
+     */
+    public function loadCreatedModules(): self
+    {
+        $file = base_path('storage/app/sdk_created_modules.json');
+
+        $this->createdModules = file_exists($file)
+            ? json_decode(file_get_contents($file), true)
+            : [];
+
+        return $this;
+    }
+
+    /**
+     * Select a module by module_key from created modules
+     */
+    public function select(string $moduleKey): self
+    {
+        $module = collect($this->createdModules)
+            ->first(fn($m) => $m['module_key'] === $moduleKey);
+
+        if (!$module) {
+            throw new \InvalidArgumentException("Module '{$moduleKey}' not found in created modules.");
+        }
+
+        $this->module = $module;
+
+        return $this;
+    }
+
+    /**
+     * Set host routes path and overwrite flag
+     */
+    public function setHostRoutesPath(string $hostRoutesPath, bool $overwrite = true): self
+    {
+        $this->hostRoutesPath = $hostRoutesPath;
+        $this->overwrite = $overwrite;
+
+        return $this;
+    }
+
+    /**
+     * Ensure install paths from config exist
+     */
+    public function ensureInstallPaths(): self
+    {
+        $paths = config('schoolpalm.install_path', []);
+
+        foreach ($paths as $path) {
+            if (!is_string($path) || empty($path)) continue;
+            File::ensureDirectoryExists($path);
+        }
+
+        return $this;
+    }
+
+    /**
+     * Install the module to SDK registry
+     */
+    public function installToRegistry(): self
+    {
+        if (empty($this->module)) {
+            throw new \RuntimeException("No module selected to install.");
+        }
+
+        $folder = $this->module['is_common'] ?? false
+            ? 'common'
+            : ($this->module['levels'][0] ?? 'Default');
+
+        $this->registry->addModule([
+            'vendor'    => $this->module['vendor'],
+            'module'    => $this->module['module'],
+            'name'      => $this->module['module'],
+            'folder'    => $folder,
+            'module_key'=> $this->module['module_key'],
+            'type'      => 'custom',
+            'icon'      => $this->module['icon'] ?? null,
+            'is_common' => $this->module['is_common'] ?? false,
+            'path'      => $this->module['path'],
+            'installed' => true,
+        ]);
+
+        $this->module['installed'] = true;
+
+        return $this;
+    }
+
+    /**
+     * Copy vendor routes into app routes folder and auto-require it
+     */
+    public function installRoutes(): self
+    {
+        $sourceFile = ModulePaths::basePath('routes/vendor_routes.php');
+        $destFile   = base_path('routes/vendor_routes.php');
+        $webFile    = base_path('routes/web.php');
+
+        if (File::exists($sourceFile)) {
+            File::ensureDirectoryExists(dirname($destFile));
+
+            if (!File::exists($destFile) || md5_file($sourceFile) !== md5_file($destFile)) {
+                File::copy($sourceFile, $destFile);
+            }
+
+            $this->ensureWebRoutesRequire($webFile);
+        }
+
+        // If the selected module has routes
+        if (!empty($this->module) && !empty($this->hostRoutesPath)) {
+            $modulePath = rtrim($this->module['path'], DIRECTORY_SEPARATOR);
+            $sourceFile = $modulePath . DIRECTORY_SEPARATOR . 'vendor_routes.php';
+            $destFile   = rtrim($this->hostRoutesPath, DIRECTORY_SEPARATOR)
+                . DIRECTORY_SEPARATOR
+                . strtolower($this->module['module_key']) . '_routes.php';
+
+            if (is_file($sourceFile)) {
+                File::ensureDirectoryExists($this->hostRoutesPath);
+                if (!file_exists($destFile) || $this->overwrite) {
+                    copy($sourceFile, $destFile);
+                }
             }
         }
 
-        $module['installed'] = false;
-        return true;
+        return $this;
+    }
+
+    protected function ensureWebRoutesRequire(string $webFile): void
+    {
+        if (!File::exists($webFile)) return;
+
+        $requireBlock = <<<PHP
+
+// Auto-loaded SchoolPalm vendor routes
+\$vendorRoutes = __DIR__ . '/vendor_routes.php';
+if (file_exists(\$vendorRoutes)) {
+    require \$vendorRoutes;
+}
+
+PHP;
+
+        $contents = File::get($webFile);
+        if (!str_contains($contents, 'vendor_routes.php')) {
+            File::append($webFile, $requireBlock);
+        }
     }
 
     /**
-     * Check registry for modules that are installed but removed from SDK.
-     *
-     * Returns a list of orphaned modules that exist in host app but not in current SDK.
-     *
-     * @param array $registry   Full module registry
-     * @param array $sdkModules Modules currently available in SDK
-     *
-     * @return array List of orphaned modules
+     * Uninstall the selected module
+     */
+    public function uninstallModule(): self
+    {
+        if (empty($this->module) || empty($this->hostRoutesPath)) return $this;
+
+        $destFile = rtrim($this->hostRoutesPath, DIRECTORY_SEPARATOR)
+            . DIRECTORY_SEPARATOR
+            . strtolower($this->module['module_key']) . '_routes.php';
+
+        if (is_file($destFile)) unlink($destFile);
+
+        $this->module['installed'] = false;
+
+        return $this;
+    }
+
+    /**
+     * Get orphaned modules (static because it doesn't depend on instance)
      */
     public static function getOrphanedModules(array $registry, array $sdkModules): array
     {
         $sdkKeys = array_map(fn($m) => $m['module_key'], $sdkModules);
 
-        return array_filter($registry, fn($m) => ! in_array($m['module_key'], $sdkKeys) && ($m['installed'] ?? false));
+        return array_filter($registry, fn($m) => !in_array($m['module_key'], $sdkKeys) && ($m['installed'] ?? false));
+    }
+
+    /**
+     * Get selected module
+     */
+    public function getModule(): array
+    {
+        return $this->module;
+    }
+
+    /**
+     * Get all created modules
+     */
+    public function getCreatedModules(): array
+    {
+        return $this->createdModules;
     }
 }

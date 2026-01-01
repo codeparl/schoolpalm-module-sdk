@@ -22,14 +22,22 @@
       ]
     }
   },
-
+"repositories": [
+    {
+        "type": "path",
+        "url": "E:/dev-server/www/packages/schoolpalm-module-bridge",
+        "options": {
+            "symlink": true
+        }
+    }
+],
   "require": {
     "php": "^8.2",
     "illuminate/support": "^12.0",
     "illuminate/console": "^12.0",
     "opis/json-schema": "^2.6",
     "inertiajs/inertia-laravel": "^2.0",
-    "schoolpalm/module-bridge": "dev-main"
+    "schoolpalm/module-bridge": "@dev"
   },
 
   "suggest": {
