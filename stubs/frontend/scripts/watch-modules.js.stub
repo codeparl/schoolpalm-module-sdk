@@ -1,0 +1,54 @@
+import { spawn } from 'child_process'
+import fs from 'fs'
+import path from 'path'
+
+const ROOT = process.cwd()
+const MODULES_DIR = path.join(ROOT, 'modules')
+
+const moduleList =  {{ modules }}
+
+// -----------------------
+// Start a dev process
+// -----------------------
+function startDevProcess(command, cwd) {
+  const proc = spawn('pnpm', command, {
+    cwd,
+    stdio: 'inherit',
+    shell: true
+  })
+
+  proc.on('close', code => {
+    console.log(`❌ Dev server at ${cwd} exited with code ${code}`)
+  })
+
+  proc.on('error', err => {
+    console.error(`⚠️ Failed to start dev server at ${cwd}:`, err)
+  })
+}
+
+
+// -----------------------
+// Watch modules
+// -----------------------
+if (!fs.existsSync(MODULES_DIR)) {
+  console.log('⚠️ No modules folder found.')
+  process.exit(0)
+}
+
+
+if (!moduleList) {
+  console.log('⚠️ No modules found to watch.')
+  process.exit(0)
+}
+
+console.log('📦 Watching modules:',Object.keys(moduleList).join(','))
+
+for (const name in moduleList) {
+    const module = moduleList[name];
+    const cwd = path.join(MODULES_DIR, module.path, 'Frontend')
+
+  console.log(`🔹 Starting dev server for module: ${name} (port: ${module.port})`)
+  startDevProcess(['run', 'dev', '--', '--port', module.port.toString()], cwd)
+
+
+}

@@ -4,6 +4,7 @@ namespace SchoolPalm\ModuleSDK\Http;
 
 use Illuminate\Http\Request;
 use Inertia\Inertia;
+use SchoolPalm\ModuleBridge\Context\CurrentContext;
 use SchoolPalm\ModuleSDK\Core\BaseModule;
 use SchoolPalm\ModuleSDK\Core\ModuleRegistry;
 use SchoolPalm\ModuleSDK\Helpers\Helper;
@@ -57,6 +58,7 @@ class ModuleController
             return null;
         }
 
+
         $context = [
             'portal'     => Helper::getRouteSegment('portal'),
             'moduleName' => $this->moduleName,
@@ -86,10 +88,12 @@ class ModuleController
     {
         $module = $this->resolveModule();
 
+
         if ($module === null) {
             // No module requested; just render dashboard
             return $this->dashboard();
         }
+
 
         $result = $module->performAction();
 

@@ -4,7 +4,6 @@ namespace SchoolPalm\ModuleSDK\Generators;
 
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Str;
-use SchoolPalm\ModuleSDK\Helpers\AcademicLevelManager;
 use SchoolPalm\ModuleSDK\Helpers\Helper;
 use SchoolPalm\ModuleSDK\Manifest\ManifestFactory;
 use SchoolPalm\ModuleSDK\Support\ModulePaths;
@@ -13,22 +12,19 @@ class ModuleScaffold
 {
     protected const STRUCTURE_FILE = 'module_structure.json';
 
-    public function make(string $manifestPath): array
+    public function make(string|array $manifestPath): array
     {
-        $data = ManifestFactory::loadManifest($manifestPath);
+        if (is_string($manifestPath))
+            $data = ManifestFactory::loadManifest($manifestPath);
+        else  $data  =  $manifestPath;
 
 
-        $vendor = Str::studly($data['vendor']);
         $module = Str::studly(Helper::moduleFolderName($data['module_key']));
-
-        // Resolve academic levels strictly from manifest
-        $levels = $data['level'] ?? [0];
-        $level  = AcademicLevelManager::joinByCodes($levels);
-
         $base = config('schoolpalm.modules_path', base_path('modules'));
 
         // Expected root (MUST already exist)
-        $root = "{$base}/{$vendor}/{$level}/{$module}";
+        //first remove Backend  part
+        $root =  $base . '/' .  $data['root'];
 
         if (!File::exists($root)) {
             throw new \RuntimeException(
@@ -36,45 +32,87 @@ class ModuleScaffold
             );
         }
 
-        // Generate sub-structure
-        $paths = [
-            'root'        => $root,
-            'contracts'   => "{$root}/Contracts",
-            'actions'     => "{$root}/Actions",
-            'services'    => "{$root}/Services",
-            'models'      => "{$root}/Models",
-            'events'      => "{$root}/Events",
-            'listeners'   => "{$root}/Listeners",
-            'migrations'  => "{$root}/Migrations",
-            'resources'   => "{$root}/Resources",
-            'views'       => "{$root}/Resources/views",
-            'lang'        => "{$root}/Resources/lang",
-            'assets'      => "{$root}/Resources/assets",
-            'js'          => "{$root}/Resources/js",
-            'js_pages'    => "{$root}/Resources/js/Pages",
-            'layouts'     => "{$root}/Resources/Layout",
-            'components'  => "{$root}/Resources/js/Components",
-            'composables' => "{$root}/Resources/js/composables",
-            'providers'   => "{$root}/Providers",
-            'tests'       => "{$root}/Tests",
-        ];
+        $frontend_paths =  $this->frontend($root);
+        $backend_paths =  $this->backend($root);
 
-        foreach ($paths as $key => $path) {
-            if ($key === 'root') continue;
-            File::ensureDirectoryExists($path);
-        }
 
         $structure = [
             'module'    => $module,
+            'root' => $data['root'],
             'singular'  => Str::singular($module),
-            'namespace' => "{$vendor}\\{$level}\\{$module}",
-            'paths'     => $paths
+            'namespace' => $data['namespace'],
+            'paths'     => [
+                'frontend' => $frontend_paths,
+                'backend' => $backend_paths,
+
+            ]
         ];
 
         // Save structure immediately
         self::saveStructure($root, $structure);
 
         return $structure;
+    }
+
+
+    private function ensureDirectory(array $paths)
+    {
+        foreach ($paths as $key => $path) {
+            if ($key === 'root') continue;
+            File::ensureDirectoryExists($path);
+        }
+    }
+
+    /**
+     * create backend files and folders
+     */
+    public function backend(string $root): array
+    {
+        $_root = $root;
+        $root .= '/Backend';
+        $paths = [
+            'contracts'   => "{$root}/Contracts",
+            'contracts'   => "{$root}/Contracts/Core",
+            'facades'   => "{$root}/Facades",
+            'actions'     => "{$root}/Actions",
+            'services'    => "{$root}/Services",
+            'models'      => "{$root}/Models",
+            'dtos'      => "{$root}/DTOs",
+            'traits'   => "{$root}/Traits",
+            'events'      => "{$root}/Events",
+            'listeners'   => "{$root}/Listeners",
+            'database'  => "{$root}/Database",
+            'migrations'  => "{$root}/Database/migrations",
+            'seeder'  => "{$root}/Database/Seeders",
+            'providers'   => "{$root}/Providers",
+            'relations'   => "{$root}/Relations",
+            'tests'       => "{$root}/Tests"
+
+        ];
+
+        $this->ensureDirectory($paths);
+
+        return $paths;
+    }
+
+    /**
+     * create frontend files and folders
+     */
+    public function frontend(string $root): array
+    {
+
+        $root   .= '/Frontend';
+
+        $paths = [
+            'src'   => "{$root}/src",
+            'assets'   => "{$root}/src/assets",
+            'pages'   => "{$root}/src/Pages",
+            'router'   => "{$root}/src/router",
+            'stores'   => "{$root}/src/stores",
+        ];
+
+        $this->ensureDirectory($paths);
+        return $paths;
     }
 
     /**
@@ -112,34 +150,32 @@ class ModuleScaffold
 
 
 
-public static function createStubFiles(): void
-{
-    $stubsDir = ModulePaths::stubsPath();
-    $stubMapping = json_decode(File::get(ModulePaths::stubsMap()), true);
+    public static function createStubFiles(): void
+    {
+        $stubsDir = ModulePaths::stubsPath();
+        $stubMapping = json_decode(File::get(ModulePaths::stubsMap()), true);
 
 
-    // Build a lookup of allowed stub filenames
-    $allowedFiles = array_values($stubMapping);
+        // Build a lookup of allowed stub filenames
+        $allowedFiles = array_values($stubMapping);
 
-    // Delete existing .stub files NOT in mapping
-    foreach (File::files($stubsDir) as $file) {
-        if (
-            $file->getExtension() === 'stub'
-            && !in_array($file->getFilename(), $allowedFiles, true)
-        ) {
-            File::delete($file->getPathname());
+        // Delete existing .stub files NOT in mapping
+        foreach (File::files($stubsDir) as $file) {
+            if (
+                $file->getExtension() === 'stub'
+                && !in_array($file->getFilename(), $allowedFiles, true)
+            ) {
+                File::delete($file->getPathname());
+            }
+        }
+
+        // Create missing stub files from mapping
+        foreach ($stubMapping as $key => $fileName) {
+            $filePath = rtrim($stubsDir, '/') . '/' . $fileName;
+
+            if (!File::exists($filePath)) {
+                File::put($filePath, "// Stub for {$key}");
+            }
         }
     }
-
-    // Create missing stub files from mapping
-    foreach ($stubMapping as $key => $fileName) {
-        $filePath = rtrim($stubsDir, '/') . '/' . $fileName;
-
-        if (!File::exists($filePath)) {
-            File::put($filePath, "// Stub for {$key}");
-        }
-    }
-}
-
-
 }

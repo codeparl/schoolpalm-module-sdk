@@ -1,0 +1,43 @@
+import { defineStore } from 'pinia'
+import type { ModuleStartPayload, ModuleContextPayload } from '@schoolpalm/message-bridge'
+
+interface RuntimeState {
+  moduleId: string | null
+  context: Record<string, any>
+  started: boolean
+}
+
+export const useRuntimeStore = defineStore('runtime', {
+  state: (): RuntimeState => ({
+    moduleId: null,
+    context: {},
+    started: false,
+  }),
+  getters: {
+    // Return a copy of context to prevent accidental mutations
+    getContext: (state) => () => ({ ...state.context }),
+  },
+  actions: {
+    // Called when a module sends MODULE_START
+    start(payload: ModuleStartPayload) {
+      this.started = true
+      this.moduleId = payload.moduleId
+      // Deep copy to avoid reactive issues
+      this.context = JSON.parse(JSON.stringify(payload.context || {}))
+    },
+
+    // Called when host sends CONTEXT_UPDATE
+    updateContext(ctx: ModuleContextPayload) {
+      if (!ctx) return
+      // Merge new context properties
+      this.context = { ...this.context, ...ctx }
+    },
+
+    // Reset store state (useful on module exit)
+    reset() {
+      this.moduleId = null
+      this.context = {}
+      this.started = false
+    },
+  },
+})

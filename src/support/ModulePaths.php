@@ -4,8 +4,8 @@ namespace SchoolPalm\ModuleSDK\Support;
 
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Str;
-use SchoolPalm\ModuleSDK\Helpers\Helper;
-use SchoolPalm\ModuleSDK\Helpers\AcademicLevelManager;
+use SchoolPalm\ModuleBridge\Support\LevelManager;
+use SchoolPalm\ModuleBridge\Support\Helper as bridgeHelper;
 
 class ModulePaths
 {
@@ -25,13 +25,17 @@ class ModulePaths
         return __DIR__ . '/../../stubs';
     }
 
-      public static function basePath(string $path=''): string
+    public static function basePath(string $path = ''): string
     {
-        return realpath(__DIR__ . '/../').'/'.$path;
+        return realpath(__DIR__ . '/../') . '/' . $path;
     }
 
+    public static function configPath(): string
+    {
+        return realpath(__DIR__ . '/../../config/sdk.php');
+    }
 
-     public static function stubsMap(): string
+    public static function stubsMap(): string
     {
         return __DIR__ . '/../../stubs/stubs.json';
     }
@@ -44,14 +48,14 @@ class ModulePaths
     }
 
     public static function moduleRegisterPath(): string
-{
-    return realpath(__DIR__ . '/../../');
-}
+    {
+        return realpath(__DIR__ . '/../../');
+    }
 
-public static function registryFile(): string
-{
-    return self::moduleRegisterPath() . '/modules.json';
-}
+    public static function registryFile(): string
+    {
+        return self::moduleRegisterPath() . '/modules.json';
+    }
 
     /**
      * Resolve levels for folder/namespace based on rules:
@@ -71,43 +75,27 @@ public static function registryFile(): string
     /**
      * Module folder path: vendor/level/module
      */
-    public static function modulePath(string $moduleKey, ?array $levels = null, bool $isCommon = true): string
+    public static function modulePath(string $root): string
     {
-        [$vendor, $module] = explode('.', $moduleKey, 2);
-
-        $resolvedLevels = self::resolveLevels($levels, $isCommon);
-
-        $levelFolder = AcademicLevelManager::joinByCodes($resolvedLevels);
-
         return self::modulesBasePath()
-            . '/' . Str::studly($vendor)
-            . '/' . $levelFolder
-            . '/' . Helper::moduleFolderName($module);
+            . '/' . $root;
     }
 
     /**
      * Module PHP namespace: vendor\level\module
      * NOTE: Excludes the base folder like 'Modules'
      */
-    public static function moduleNamespace(string $moduleKey, ?array $levels = null, bool $isCommon = true): string
+    public static function moduleNamespace(array $module, string $levelFolder): string
     {
-        [$vendor, $module] = explode('.', $moduleKey, 2);
-
-        $resolvedLevels = self::resolveLevels($levels, $isCommon);
-
-        $levelFolder = AcademicLevelManager::joinByCodes($resolvedLevels);
-
-        return Str::studly($vendor)
-            . '\\' . $levelFolder
-            . '\\' . Helper::moduleFolderName($module);
+        return bridgeHelper::moduleNamespace($module, $levelFolder);
     }
 
     /**
      * Namespace for module models
      */
-    public static function moduleModelsNamespace(string $moduleKey, ?array $levels = null, bool $isCommon = true): string
+    public static function moduleModelsNamespace(array $module, string $levelFolder): string
     {
-        return self::moduleNamespace($moduleKey, $levels, $isCommon) . '\\Models';
+        return self::moduleNamespace($module, $levelFolder) . '\\Models';
     }
 
     /**
@@ -122,7 +110,7 @@ public static function registryFile(): string
     ): string {
         $resolvedLevels = self::resolveLevels($levels, $isCommon);
 
-        $levelFolder = AcademicLevelManager::joinByCodes($resolvedLevels);
+        $levelFolder = LevelManager::joinByCodes($resolvedLevels);
 
         return resource_path(
             "{$vendor}/{$levelFolder}/{$role}/{$module}"

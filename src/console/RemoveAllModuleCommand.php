@@ -3,7 +3,9 @@
 namespace SchoolPalm\ModuleSDK\Console;
 
 use Illuminate\Support\Facades\File;
+use SchoolPalm\ModuleBridge\Core\CreatedModuleRegistry;
 use SchoolPalm\ModuleSDK\Core\ModuleRegistry;
+use SchoolPalm\ModuleSDK\Support\ModulePaths;
 
 class RemoveAllModuleCommand extends ModuleCommandBase
 {
@@ -12,7 +14,7 @@ class RemoveAllModuleCommand extends ModuleCommandBase
 
     public function handle(): int
     {
-        $registry = app(ModuleRegistry::class);
+        $registry = new CreatedModuleRegistry(ModulePaths::registryFile());
         $modules  = $registry->all();
 
         if (empty($modules)) {
@@ -59,13 +61,9 @@ class RemoveAllModuleCommand extends ModuleCommandBase
             $this->info("🗑 Deleted: {$module['namespace']}");
         }
 
-        // -------------------- REMOVE FROM REGISTRY --------------------
-        // Remove by ID in reverse order (IDs are reindexed internally)
-        collect($modules)
-            ->sortByDesc('id')
-            ->each(fn ($module) =>
-                $registry->remove((int) $module['id'])
-            );
+        $registry->removeAll();
+
+     
 
         $this->info('✅ All modules removed successfully.');
 

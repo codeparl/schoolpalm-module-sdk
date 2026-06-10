@@ -1,0 +1,13 @@
+// src/router/index.ts
+import type { RouteRecordRaw } from 'vue-router'
+
+const routes: RouteRecordRaw[] = [
+  {
+    path: '/',
+    name: 'dashboard',
+    component: () => import('../Pages/Dashboard.vue'),
+  },
+  
+]
+
+export default routes

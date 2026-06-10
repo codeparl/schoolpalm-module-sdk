@@ -3,7 +3,9 @@
 namespace SchoolPalm\ModuleSDK\Console;
 
 use Illuminate\Support\Facades\File;
+use SchoolPalm\ModuleBridge\Core\CreatedModuleRegistry;
 use SchoolPalm\ModuleSDK\Core\ModuleRegistry;
+use SchoolPalm\ModuleSDK\Support\ModulePaths;
 
 class RemoveModuleCommand extends ModuleCommandBase
 {
@@ -29,7 +31,8 @@ class RemoveModuleCommand extends ModuleCommandBase
         }
 
         // Remove from registry
-        app(ModuleRegistry::class)->remove((int)$module['id']);
+        (new CreatedModuleRegistry(ModulePaths::registryFile()))->remove($module['module_key']);
+        
         $this->info(" Module [{$module['module_key']}] removed from registry.");
 
         return self::SUCCESS;

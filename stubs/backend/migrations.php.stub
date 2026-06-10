@@ -1,0 +1,53 @@
+<?php
+
+use SchoolPalm\ModuleBridge\Database\BaseMigration;
+use Illuminate\Support\Facades\Schema;
+
+class {{ class }} extends BaseMigration
+{
+
+    public function __construct()
+{
+    parent::__construct();
+}
+
+    public function tableName(): string
+    {
+        return '{{ table }}';
+    }
+    public function up(): void
+    {
+        $this->createTable($this->tableName(), function ($table) {
+
+            /*
+            |--------------------------------------------------------------------------
+            | Developer Schema Section
+            |--------------------------------------------------------------------------
+            |
+            | Add module-specific columns only.
+            */
+
+        });
+    }
+
+
+      public function update()
+    {
+        // Vendor overrides when schema update is needed
+        //e.g. $this->schema->string('first_name')->nullable();
+    }
+
+    public function drop()
+    {
+        // Vendor overrides when module schema is removed
+    }
+
+    public function rebuild()
+    {
+        // Vendor overrides when schema rebuild is required
+    }
+
+
+
+
+}

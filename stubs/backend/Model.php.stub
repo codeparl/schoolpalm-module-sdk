@@ -1,0 +1,27 @@
+<?php
+
+namespace {{ namespace }};
+
+use SchoolPalm\ModuleBridge\Models\Model as BaseModel;
+
+class {{ class }} extends BaseModel
+{
+    /**
+     * Table name for this model.
+     */
+    protected $table = '{{ table }}';
+
+    /**
+     * Mass assignable attributes.
+     */
+    protected $fillable = [
+        /*
+        |--------------------------------------------------------------------------
+        | Fillable Attributes
+        |--------------------------------------------------------------------------
+        |
+        | Add module business fields here.
+        |
+        */
+    ];
+}

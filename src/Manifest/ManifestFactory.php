@@ -3,16 +3,14 @@
 namespace SchoolPalm\ModuleSDK\Manifest;
 
 use Illuminate\Support\Str;
-use Illuminate\Support\Facades\File;
 use SchoolPalm\ModuleBridge\Support\Helper as SupportHelper;
 use SchoolPalm\ModuleSDK\Helpers\Helper;
-use SchoolPalm\ModuleSDK\Support\ModulePaths;
 
 class ManifestFactory
 {
-   public static function make(array $data): array
+    public static function make(array $data): array
     {
-        $config = config('schoolpalm');
+        $config = config('sdk');
 
         $name        = $data['name'];
         $vendor      = $data['vendor'] ?? $config['vendor'] ?? 'SchoolPalm';
@@ -24,41 +22,36 @@ class ManifestFactory
         $isCommon    = $data['is_common'] ?? true;
         $level       = $data['level'] ?? [];
 
-        if ($isCommon && !empty($level)) $isCommon =false;
+        if ($isCommon && !empty($level)) $isCommon = false;
 
         if (!$isCommon && empty($level)) $level = [0];
 
-        
 
-        $levelSegment = Helper::levelsFolderName($level);
+
         $moduleName   = Helper::moduleFolderName($name);
-        $namespace    = Str::studly($vendor) . '\\' . $levelSegment . '\\' . $moduleName;
-
+        $root_np = Helper::moduleNamespace($name, $level);
+        $namespace    = $root_np . '\\Backend';
+        $authorName  =  is_array($data['author'])  ? $data['author']['name'] : $data['author'];
         $author = [
-            'name'    => $data['author']['name'] ?? $config['author']['name'] ?? 'SchoolPalm',
+            'name'    => $authorName ?? $config['author']['name'] ?? 'SchoolPalm',
             'email'   => $data['author']['email'] ?? $config['author']['email'] ?? null,
             'website' => $data['author']['website'] ?? $config['author']['website'] ?? null,
         ];
 
-           $dependencies = [
-        'backend'  => (object) ($data['dependencies']['backend']  ?? $config['dependencies']['backend']  ?? []),
-        'frontend' => (object) ($data['dependencies']['frontend'] ?? $config['dependencies']['frontend'] ?? []),
-    ];
-
-        $resources = [
-            'ui' => [
-                'framework'   => $data['resources']['ui']['framework']   ?? $config['resources']['ui']['framework'] ?? [],
-                'tailwind'    => $data['resources']['ui']['tailwind']    ?? $config['resources']['ui']['tailwind'] ?? false,
-                'source_path' => $data['resources']['ui']['source_path'] ?? $config['resources']['ui']['source_path'] ?? null,
-            ],
-            'assets' => $data['resources']['assets'] ?? $config['resources']['assets'] ?? null,
+        $dependencies = [
+            'backend'  => (object) ($data['dependencies']['backend']  ?? $config['dependencies']['backend']  ?? []),
         ];
+
+
 
         $migrations = [
-            'path'           => $data['migrations']['path'] ?? 'database/migrations',
+            'path'           => $data['migrations']['path'] ?? 'Database/migrations',
             'run_on_install' => $data['migrations']['run_on_install'] ?? true,
             'run_on_update'  => $data['migrations']['run_on_update'] ?? true,
+            'tables' => $data['tables'] ?? []
         ];
+
+
 
         $models = [
             'path'      => $data['models']['path'] ?? 'Models',
@@ -68,7 +61,7 @@ class ManifestFactory
 
         $menus = $data['menus'] ?? [[
             'name'        => $moduleKey . '.' . ($config['menu']['permission'] ?? 'manage') . '.' . self::normalizePermission($name),
-            'label'       => $name,
+            'label'       => ucfirst($name),
             'icon'        => $data['icon'] ?? 'lucide-layers',
             'permission'  => ($config['menu']['permission'] ?? 'manage') . '.' . self::normalizePermission($name),
             'route'       => $config['menu']['route'] ?? null,
@@ -79,22 +72,36 @@ class ManifestFactory
         $actions = $data['actions'] ?? [];
 
         $entry = $data['entry'] ?? [
-            'provider' => $namespace . '\\Providers\\' . Str::singular($moduleName ). 'ServiceProvider',
+            'provider' => $namespace . '\\Providers\\' . self::generateModuleServiceProvider($moduleKey)
+
         ];
 
-        // Derive default provides if not supplied
-        $provides = $data['provides'] ?? [$namespace . '\\Contracts\\' . Str::singular($moduleName ) . 'Contract'];
+        $provides = [];
+        if (is_array($data['provides'] ?? []) && count($data['provides']) > 0) {
+            foreach ($data['provides'] as $key => $contract) {
+                array_push($provides, $namespace . '\\Contracts\\' . $contract);
+            }
+        } else {
+            // Derive default provides if not supplied
+            $provides = $data['provides'] ?? [$namespace . '\\Contracts\\' . Str::singular($moduleName) . 'Contract'];
+        }
+
+
 
         // Keep events empty if not supplied
-        $events = self::generateEvents($namespace, Str::singular($moduleName ))['events'];
-
+        $events = self::generateEvents($namespace, Str::singular($moduleName))['events'];
+        $sdk = ['name' => 'schoolpalm/module-sdk', 'version' => '1.5.0'];
         return [
             'name'         => $name,
+            'namespace' => $namespace,
             'vendor'       => $vendor,
+            'prefix' => $data['prefix'] ?? self::prefix($moduleKey),
             'module_key'   => $moduleKey,
             'description'  => $description,
             'version'      => $version,
+            'icon'      => $data['icon'] ?? 'lucide-Layers',
             'type'         => $type,
+            'sdk'          => $sdk,
             'menus'        => $menus,
             'role'         => $role,
             'actions'      => $actions,
@@ -103,7 +110,6 @@ class ManifestFactory
             'dependencies' => (object) $dependencies,
             'level'        => $data['level'] ?? [],
             'is_common'    => $isCommon,
-            'resources'    => $resources,
             'migrations'   => $migrations,
             'models'       => $models,
             'events'       => $events,
@@ -140,63 +146,79 @@ class ManifestFactory
         ];
     }
 
-public static function normalizeJson(array &$data, array $schema, string $path = ''): void
-{
-    if (!isset($schema['properties']) || !is_array($schema['properties'])) {
-        return;
+
+    public static function generateModuleServiceProvider(string $key): string
+    {
+        return collect(explode('.', $key))
+            ->map(fn($part) => Str::studly($part))
+            ->implode('') . 'ServiceProvider';
     }
 
-    foreach ($schema['properties'] as $key => $propertySchema) {
-        $currentPath = $path === '' ? $key : "{$path}.{$key}";
-        $valueExists = array_key_exists($key, $data);
-        $value = $valueExists ? $data[$key] : null;
+    public static function prefix(string $key): string
+    {
+        return  config('sdk.prefix') ??   implode('', array_map(
+            fn($part) => $part[0] ?? '',
+            explode('.', $key)
+        ));
+    }
 
-        // --------------------------------------------------
-        // CASE 1: OBJECT normalization
-        // --------------------------------------------------
-        if (($propertySchema['type'] ?? null) === 'object') {
-            $hasRequiredProps = isset($propertySchema['required']);
-            $isMapObject = isset($propertySchema['additionalProperties']);
+    public static function normalizeJson(array &$data, array $schema, string $path = ''): void
+    {
+        if (!isset($schema['properties']) || !is_array($schema['properties'])) {
+            return;
+        }
 
-            // Normalize missing value
-            if (!$valueExists) {
-                if (isset($propertySchema['default'])) {
-                    $data[$key] = $propertySchema['default'];
-                } elseif ($isMapObject && !$hasRequiredProps) {
+        foreach ($schema['properties'] as $key => $propertySchema) {
+            $currentPath = $path === '' ? $key : "{$path}.{$key}";
+            $valueExists = array_key_exists($key, $data);
+            $value = $valueExists ? $data[$key] : null;
+
+            // --------------------------------------------------
+            // CASE 1: OBJECT normalization
+            // --------------------------------------------------
+            if (($propertySchema['type'] ?? null) === 'object') {
+                $hasRequiredProps = isset($propertySchema['required']);
+                $isMapObject = isset($propertySchema['additionalProperties']);
+
+                // Normalize missing value
+                if (!$valueExists) {
+                    if (isset($propertySchema['default'])) {
+                        $data[$key] = $propertySchema['default'];
+                    } elseif ($isMapObject && !$hasRequiredProps) {
+                        $data[$key] = (object)[];
+                    }
+                }
+
+                // Normalize [] → {}
+                if ($valueExists && is_array($value) && empty($value) && $isMapObject) {
                     $data[$key] = (object)[];
                 }
+
+                // Recurse if object now exists
+                if (isset($data[$key]) && is_array($data[$key])) {
+                    self::normalizeJson($data[$key], $propertySchema, $currentPath);
+                }
+
+                if (isset($data[$key]) && is_object($data[$key])) {
+                    // Convert object to array temporarily for recursion
+                    $tmp = (array) $data[$key];
+                    self::normalizeJson($tmp, $propertySchema, $currentPath);
+                    $data[$key] = (object) $tmp;
+                }
             }
 
-            // Normalize [] → {}
-            if ($valueExists && is_array($value) && empty($value) && $isMapObject) {
-                $data[$key] = (object)[];
-            }
-
-            // Recurse if object now exists
-            if (isset($data[$key]) && is_array($data[$key])) {
-                self::normalizeJson($data[$key], $propertySchema, $currentPath);
-            }
-
-            if (isset($data[$key]) && is_object($data[$key])) {
-                // Convert object to array temporarily for recursion
-                $tmp = (array) $data[$key];
-                self::normalizeJson($tmp, $propertySchema, $currentPath);
-                $data[$key] = (object) $tmp;
-            }
-        }
-
-        // --------------------------------------------------
-        // CASE 2: ARRAY recursion (items)
-        // --------------------------------------------------
-        if (($propertySchema['type'] ?? null) === 'array' && isset($propertySchema['items']) && $valueExists && is_array($value)) {
-            foreach ($value as $index => $item) {
-                if (is_array($item) && isset($propertySchema['items']['properties'])) {
-                    self::normalizeJson($data[$key][$index], $propertySchema['items'], "{$currentPath}[{$index}]");
+            // --------------------------------------------------
+            // CASE 2: ARRAY recursion (items)
+            // --------------------------------------------------
+            if (($propertySchema['type'] ?? null) === 'array' && isset($propertySchema['items']) && $valueExists && is_array($value)) {
+                foreach ($value as $index => $item) {
+                    if (is_array($item) && isset($propertySchema['items']['properties'])) {
+                        self::normalizeJson($data[$key][$index], $propertySchema['items'], "{$currentPath}[{$index}]");
+                    }
                 }
             }
         }
     }
-}
 
 
     protected static function normalizePermission(string $name): string
@@ -207,19 +229,39 @@ public static function normalizeJson(array &$data, array $schema, string $path =
 
 
     /**
- * Load a module manifest JSON file
- *
- * @param string $filePath Full path to manifest.json
- * @return array|null Returns associative array on success, null on failure
- */
-public  static function  loadManifest(string $filePath): ?array
-{
+     * Load a module manifest JSON file
+     *
+     * @param string $filePath Full path to manifest.json
+     * @return array|null Returns associative array on success, null on failure
+     */
+    public  static function  loadManifest(string $filePath): ?array
+    {
 
-    if (!file_exists($filePath)) {
-        return null;
+        if (!file_exists($filePath)) {
+            return null;
+        }
+        return SupportHelper::loadJson($filePath);
     }
-    return SupportHelper::loadJson($filePath);
-}
 
 
+    public static function update($existingManifest, array $data, string $filePath)
+    {
+
+        // 2. Merge allowed editable fields
+        $updatedManifest = array_merge($existingManifest, [
+            'name'         => $data['name']         ?? $existingManifest['name'],
+            'description'  => $data['description']  ?? $existingManifest['description'],
+            'version'      => $data['version']      ?? $existingManifest['version'],
+            'icon'       => $data['icon'] ?? 'lucide-Layers',
+            'prefix' => $data['prefix'] ?? self::prefix($data['module_key']),
+            'menus'   => $data['menus']   ?? $existingManifest['menus'],
+            'provides'   => $data['provides']   ?? [],
+            'migrations' => $data['migrations'],
+            'actions' => $data['actions'] ?? $existingManifest['actions']
+        ]);
+
+        ManifestValidator::validate($updatedManifest);
+
+        SupportHelper::storeJson($filePath, $updatedManifest);
+    }
 }

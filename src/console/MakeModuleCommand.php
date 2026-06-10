@@ -2,14 +2,14 @@
 
 namespace SchoolPalm\ModuleSDK\Console;
 
-use Illuminate\Console\Command;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Str;
-use SchoolPalm\ModuleBridge\Core\CreatedModuleRegistry;
+use SchoolPalm\ModuleBridge\Facades\CreatedRegistry;
 use SchoolPalm\ModuleBridge\Support\Helper;
 use SchoolPalm\ModuleSDK\Manifest\ManifestFactory;
 use SchoolPalm\ModuleSDK\Support\ModulePaths;
 use SchoolPalm\ModuleSDK\Manifest\ManifestValidator;
+
 class MakeModuleCommand extends ModuleCommandBase
 {
     protected $signature = 'sp:make-m {name?}';
@@ -58,8 +58,8 @@ class MakeModuleCommand extends ModuleCommandBase
             'module_key'  => $moduleKey,
             'description' => '',
             'role'        => $role,
-            'level'=>$levels,
-            'is_common'=>$is_common
+            'level' => $levels,
+            'is_common' => $is_common
 
         ];
 
@@ -81,7 +81,7 @@ class MakeModuleCommand extends ModuleCommandBase
         /* -------------------------------------------------------------
          | Create module directory
          |-------------------------------------------------------------*/
-        $modulePath = ModulePaths::modulePath($manifest['module_key'],$levels);
+        $modulePath = ModulePaths::modulePath($manifest['module_key'], $levels);
 
         if (File::exists($modulePath)) {
             $this->error("❌ Module already exists: {$modulePath}");
@@ -93,13 +93,12 @@ class MakeModuleCommand extends ModuleCommandBase
         /* -------------------------------------------------------------
          | Write manifest.json
          |-------------------------------------------------------------*/
-        Helper::storeJson('manifest',$manifest,$modulePath);
-
-              /* -------------------------------------------------------------
+        Helper::storeJson($modulePath . '/manifest.json', $manifest);
+        File::copy(ModulePaths::stubsPath() . '/dev-pipeline.json', $modulePath . '/pipeline.json');
+        /* -------------------------------------------------------------
          | Register module in package registry
          |-------------------------------------------------------------*/
-        $register  = new CreatedModuleRegistry(ModulePaths::registryFile());
-         $data = [
+        $data = [
             'module_key' => $manifest['module_key'],
             'vendor'     => $manifest['vendor'],
             'levels'     => $manifest['level'] ?: [],
@@ -107,18 +106,17 @@ class MakeModuleCommand extends ModuleCommandBase
             'role'     => $manifest['role'],
             'namespace'  => ModulePaths::moduleNamespace($manifest['module_key'], $manifest['level']),
             'path'       => $modulePath,
-            'manifest'   => $modulePath . '/manifest.json'];
+            'manifest'   => $modulePath . '/manifest.json'
+        ];
 
-            $data['folder']= Helper::levelFolder($data['namespace']);
-        
-        $register ->register($data );
-        $register->clearCache();
+        $data['folder'] = Helper::levelFolder($data['namespace']);
+
+        CreatedRegistry::register($data);
+        CreatedRegistry::clearCache();
 
         $this->info("✅ Module [{$manifest['module_key']}] created successfully");
         $this->line("📁 Location: {$modulePath}");
 
         return self::SUCCESS;
     }
-
-
 }

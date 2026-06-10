@@ -1,0 +1,186 @@
+/**
+ * Module Bootstrap (Cold-start safe, seamless navigation)
+ */
+
+import { createApp } from 'vue'
+import { createRouter, createWebHistory } from 'vue-router'
+import { createPinia } from 'pinia'
+import {
+    ModuleBridge,
+    MessageType,
+    HeartbeatPayload,
+} from '@schoolpalm/message-bridge'
+
+import './src/bootstrap.js'
+import routes from './src/router'       // ✅ static routes array
+import quasarSetup from './src/quasar'
+import './src/assets/css/app.css'
+import { useRuntimeStore } from './src/stores/runtime'
+import { componentName } from './src/helper'
+import { Dark } from 'quasar'
+const hostOrigin = document.referrer ? new URL(document.referrer).origin : '*'
+const pinia = createPinia()
+
+let app: any = null
+let router: any = null
+let bridge: ModuleBridge | null = null
+let appMounted = false
+
+let pendingPages: any[] = []
+let preloaderVisible = true
+let pendingFeatures: any = null
+
+// -----------------------
+// Mount Vue App (cold-start safe)
+// -----------------------
+async function mountApp() {
+    if (appMounted) return
+
+    // Create router
+    router = createRouter({
+        history: createWebHistory(),
+        routes,
+    })
+
+    const { default: App } = await import('./src/Pages/App.vue')
+    app = createApp(App)
+    app.use(pinia)
+    app.use(router)
+    quasarSetup(app)
+
+    // Mount app
+    app.mount('#{{ moduleId }}')
+    appMounted = true
+
+    if (pendingFeatures) {
+        applyFeatures(pendingFeatures)
+        pendingFeatures = null
+    }
+    console.log('Module app mounted, preloader hidden')
+
+    // Wait for router ready before processing queued pages
+    await router.isReady()
+    flushPendingPages()
+}
+
+// -----------------------
+// Navigate queued pages
+// -----------------------
+async function flushPendingPages() {
+    if (!router) return
+    for (const payload of pendingPages) {
+        try {
+            const routeName = payload.component ? componentName(payload.component) : 'dashboard'
+
+            const routeParams = payload.params || {}
+            console.log('Navigating to route:', routeName, routeParams)
+            await router.push({
+                name: routeName,
+                params: routeParams,
+            })
+            console.log(`Page ${routeName} loaded`)
+            preloaderVisible = false
+            bridge.send(MessageType.LOAD_PAGE,{})
+        } catch (err) {
+            console.error('Failed to load page:', payload.component, err)
+        }
+    }
+    pendingPages = []
+}
+
+
+
+// -----------------------
+// Init ModuleBridge
+// -----------------------
+function initBridge() {
+    console.log('brige initializing...')
+    bridge = new ModuleBridge(hostOrigin)
+    const runtime = useRuntimeStore(pinia)
+
+    // Send Handshake
+    console.log('sending Handshake...')
+    bridge.sendHandshake({
+        version: '1.0.0',
+        timestamp: Date.now(),
+    })
+    // Module Start
+    bridge.onModuleStart(async (payload: any) => {
+        console.log('Module start received:', payload)
+        if (runtime.started) return
+        runtime.start(payload)
+
+        // Queue the start page
+        pendingPages.push(payload)
+        await mountApp()
+    })
+
+    // Heartbeat
+    bridge.onHeartbeat((payload: HeartbeatPayload) => {
+        console.log('Heartbeat received from host:', payload)
+        if (!payload.ack) {
+            const response: HeartbeatPayload = { timestamp: Date.now(), ack: true }
+            bridge?.send(MessageType.HEARTBEAT, response)
+            console.log('Heartbeat ACK sent to host:', response)
+        }
+    })
+
+    // Load Page
+    bridge.onLoadPage(async (payload: any) => {
+        console.log('Module load page received:', payload)
+        if (!appMounted) {
+            pendingPages.push(payload)
+            bridge.send(MessageType.LOAD_PAGE,{})
+            return
+        }
+
+        try {
+            const routeName = payload.component ? payload.component : 'dashboard'
+            const routeParams = payload.params || {}
+            await router.push({
+                name: routeName,
+                params: routeParams,
+            })
+            console.log(`Page ${routeName} loaded`)
+
+            bridge.send(MessageType.LOAD_PAGE,{})
+        } catch (err) {
+            console.error('Failed to load page:', payload.component, err)
+        }
+    })
+
+    // Module Exit
+    bridge.on(MessageType.MODULE_EXIT, () => {
+        runtime.reset()
+        appMounted = false
+        console.log('Module exited, app state reset')
+    })
+
+    bridge.onFeatureToggle((payload) => {
+        console.log('feature toggled', payload)
+
+        if (!appMounted) {
+            pendingFeatures = payload.features
+            return
+        }
+
+        applyFeatures(payload.features)
+    })
+
+
+
+}
+function applyFeatures(features: any) {
+    if (features?.isDark !== undefined) {
+        Dark.set(features.isDark)
+    }
+}
+
+
+// -----------------------
+// Boot
+// -----------------------
+initBridge()
+
+// Export preloader for optional binding in App.vue
+export { preloaderVisible }

@@ -1,0 +1,103 @@
+# {{ MODULE_NAME }}
+
+{{ MODULE_SHORT_DESCRIPTION }}
+
+---
+
+## 📌 Overview
+
+Add module overview here...
+
+---
+
+## 🎯 Who is it for?
+
+* School administrators
+* Teachers
+* Bursars / finance teams
+* Academic departments
+
+---
+
+## ✨ Key Features
+
+* ✔  FEATURE_1 
+* ✔  FEATURE_2 
+* ✔  FEATURE_3 
+
+
+---
+
+## 🧑‍🏫 How to Use
+
+1. Install from SchoolPalm Marketplace
+2. Open from dashboard
+3. Follow on-screen guidance
+
+---
+
+## 🔌 Module Integrations (API Exposure)
+
+This module exposes functionality that can be used by other SchoolPalm modules.
+
+### 📤 Exposed Services
+
+* ** SERVICE_NAME_1 **
+
+
+---
+
+### ⚙️ Access Channel
+
+These services are accessed through the **SchoolPalm SDK Bridge**:
+
+
+
+---
+
+### 📡 Events (if applicable)
+
+This module may emit system events:
+
+
+Other modules can listen to these events via the SchoolPalm event bus.
+
+---
+
+## 🖼️ Visuals
+
+Dashboards and interfaces are available inside the module UI after installation.
+
+---
+
+## 🏫 Compatibility
+
+* Web ✔
+* Desktop ✔
+* Mobile ✔
+* Offline Mode (if supported) ✔
+
+---
+
+## 🏢 Provider
+
+**{{ VENDOR_NAME }}**
+{{ VENDOR_WEBSITE }}
+{{ VENDOR_EMAIL }}
+
+---
+
+## 📄 License
+
+Licensed under **{{ LICENSE_TYPE }}**
+
+---
+
+## ⚠️ Note
+
+This module is designed to run within the SchoolPalm ecosystem.
+Some features may depend on permissions or system configuration.
+
+---
+
+## © {{ YEAR }} {{ VENDOR_NAME }}

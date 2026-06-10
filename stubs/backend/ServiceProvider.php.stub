@@ -1,0 +1,146 @@
+<?php
+
+namespace {{ namespace }};
+
+use Illuminate\Support\ServiceProvider;
+use Illuminate\Support\Facades\File;
+
+class {{ class }} extends ServiceProvider
+{
+    public function register(): void
+    {
+        $this->bindFromFolders(
+            "{{ module_namespace }}"
+        );
+    }
+
+    protected function bindFromFolders(string $moduleNamespace): void
+    {
+        $providerReflection = new \ReflectionClass($this);
+
+        $providerPath = dirname(
+            $providerReflection->getFileName()
+        );
+
+        $modulePath = realpath(
+            $providerPath . DIRECTORY_SEPARATOR . '..'
+        );
+
+        if (!$modulePath) {
+            return;
+        }
+
+        $this->bindCoreContracts(
+            $modulePath,
+            $moduleNamespace
+        );
+    }
+
+    protected function bindCoreContracts(
+        string $modulePath,
+        string $moduleNamespace
+    ): void {
+
+        $contractsPath =
+            $modulePath
+            . DIRECTORY_SEPARATOR
+            . 'Contracts'
+            . DIRECTORY_SEPARATOR
+            . 'Core';
+
+        $servicesPath =
+            $modulePath
+            . DIRECTORY_SEPARATOR
+            . 'Services'
+            . DIRECTORY_SEPARATOR
+            . 'Core';
+
+        if (
+            !is_dir($contractsPath)
+            || !is_dir($servicesPath)
+        ) {
+            return;
+        }
+
+        /*
+        |--------------------------------------------------------------------------
+        | STRICT FILE PAIR MATCHING
+        |--------------------------------------------------------------------------
+        |
+        | Example:
+        |
+        | IdManagerCoreContract
+        | ↔
+        | IdManagerCoreService
+        |
+        | Prevents acronym/casing corruption issues.
+        |
+        */
+
+        foreach (
+            File::allFiles($contractsPath)
+            as $contractFile
+        ) {
+
+            $contractClass = pathinfo(
+                $contractFile,
+                PATHINFO_FILENAME
+            );
+
+            /*
+            |--------------------------------------------------------------------------
+            | Build Expected Service Name
+            |--------------------------------------------------------------------------
+            */
+
+            $serviceClass = str_replace(
+                'Contract',
+                'Service',
+                $contractClass
+            );
+
+            /*
+            |--------------------------------------------------------------------------
+            | Verify Service File Exists
+            |--------------------------------------------------------------------------
+            */
+
+            $serviceFile =
+                $servicesPath
+                . DIRECTORY_SEPARATOR
+                . $serviceClass
+                . '.php';
+
+            if (!file_exists($serviceFile)) {
+                continue;
+            }
+
+            /*
+            |--------------------------------------------------------------------------
+            | Build FQCNs
+            |--------------------------------------------------------------------------
+            */
+
+            $abstract =
+                $moduleNamespace
+                . '\\Contracts\\Core\\'
+                . $contractClass;
+
+            $concrete =
+                $moduleNamespace
+                . '\\Services\\Core\\'
+                . $serviceClass;
+
+            /*
+            |--------------------------------------------------------------------------
+            | Bind
+            |--------------------------------------------------------------------------
+            */
+
+            $this->app->bind(
+                $abstract,
+                $concrete
+            );
+        }
+    }
+}

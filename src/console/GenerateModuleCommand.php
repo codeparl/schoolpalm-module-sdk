@@ -47,7 +47,7 @@ class GenerateModuleCommand extends ModuleCommandBase
          | Output
          |-------------------------------------------------------------*/
         $this->info('✅ Module structure generated successfully.');
-        $this->line("📁 Root path: {$ctx['paths']['root']}");
+       // $this->line("📁 Root path: {$ctx['paths']['root']}");
 
         return self::SUCCESS;
     }

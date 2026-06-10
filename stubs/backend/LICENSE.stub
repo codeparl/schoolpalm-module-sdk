@@ -1,0 +1,107 @@
+# Proprietary License Agreement
+
+**SchoolPalm Vendor Module License (Proprietary)**
+
+---
+
+## 1. Ownership
+
+This Module is a proprietary product owned by:
+
+**Vendor:** {{ VENDOR_NAME }}
+**Email:** {{ VENDOR_EMAIL }}
+**Website:** {{ VENDOR_WEBSITE }}
+
+All rights are reserved.
+
+---
+
+## 2. Overview
+
+This software module (“Module”) is a proprietary product developed and owned by the Vendor.
+It is distributed for use within the **SchoolPalm Platform** under restricted rights.
+
+By installing, accessing, or using this Module, you agree to the terms of this license.
+
+---
+
+## 3. Grant of License
+
+The Vendor grants you a **non-exclusive, non-transferable, revocable license** to:
+
+* Install and use the Module within the SchoolPalm system
+* Use the Module for internal institutional purposes
+* Access features as permitted by your subscription or purchase
+
+---
+
+## 4. Restrictions
+
+You **may NOT**:
+
+* Modify, adapt, reverse engineer, or decompile the Module
+* Redistribute, sublicense, lease, or resell the Module
+* Use the Module outside the SchoolPalm platform
+* Remove or alter any copyright or proprietary notices
+* Attempt to bypass licensing, security, or usage restrictions
+
+---
+
+## 5. Intellectual Property
+
+* The Module remains the **exclusive property of the Vendor**
+* This license does **not transfer ownership**
+* All intellectual property rights are reserved
+
+---
+
+## 6. Updates and Support
+
+* Updates may be provided at the Vendor’s discretion or under a support agreement
+* The Vendor is not obligated to provide maintenance or support unless agreed
+
+---
+
+## 7. Termination
+
+This license is automatically terminated if:
+
+* You violate any terms of this agreement
+* Your subscription or access rights expire
+
+Upon termination:
+
+* You must cease all use of the Module
+* Any installed copies may be disabled or removed
+
+---
+
+## 8. Limitation of Liability
+
+To the maximum extent permitted by law:
+
+* The Module is provided **“as is”** without warranties of any kind
+* The Vendor is **not liable** for any direct, indirect, incidental, or consequential damages
+* This includes loss of data, business interruption, or system failure
+
+---
+
+## 9. Governing Law
+
+This agreement shall be governed by the applicable laws of the Vendor’s jurisdiction.
+
+---
+
+## 10. Acceptance
+
+By installing or using this Module, you acknowledge that you have read, understood, and agreed to this license.
+
+---
+
+## 11. Contact
+
+For licensing inquiries, support, or permissions, contact the Vendor using the details above.
+
+---
+
+**© {{ YEAR }} {{ VENDOR_NAME }}. All rights reserved.**

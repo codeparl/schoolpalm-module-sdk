@@ -1,15 +1,47 @@
 {
-    "root": "Main.php.stub",
+   "backend":{
+     "main": "ModuleActionEntry.php.stub",
+     "module": "Module.php.stub",
     "contracts": "Contract.php.stub",
+    "core-contracts": "Core-Contract.php.stub",
+    "contract-readme":"contract-readme.md.stub",
+    "query-engine":"QueryEngine.php.stub",
     "actions": "Actions.php.stub",
+    "base-service": "BaseService.php.stub",
     "services": "Service.php.stub",
     "providers": "ServiceProvider.php.stub",
     "models": "Model.php.stub",
+    "migrations": "migrations.php.stub",
     "events": "Event.php.stub",
     "listeners": "Listener.php.stub",
-    "js": "App.js.stub",
-    "layouts": "Layout.vue.stub",
-    "components": "Component.vue.stub",
-    "composables": "Composable.js.stub",
-    "tests": "Test.php.stub"
+    "tests": "Test.php.stub",
+    "readme": "README.md.stub",
+    "license": "LICENSE.stub",
+    "dtos": "DTO.php.stub"
+   },
+   "assets":"assets",
+   "frontend":{
+    "devPage":"index.html.stub",
+    "entry":"index.ts.stub",
+    "package":"package.json.stub",
+    "postcss":"postcss.config.js.stub",
+    "tailwind":"tailwind.config.js.stub",
+    "tsconfig":"tsconfig.json.stub",
+    "vite_env":"vite-env.d.ts.stub",
+    "vite_config":"vite.config.ts.stub",
+    "vue_shim":"vue-shims.d.ts.stub",
+    "css":"app.css.stub",
+    "vueApp":"App.vue.stub",
+    "dashboard":"Dashboard.vue.stub",
+    "routes":"index.ts.stub",
+    "appRuntime":"runtime.ts.stub",
+    "bootstrap":"bootstrap.js.stub",
+    "quasarSetup":"quasar.js.stub",
+    "helper":"helper.ts.stub",
+    "watchScript":"watch-modules.js.stub",
+    "buildScript":"build-all.js.stub",
+    "deployScript":"deploy-modules.js.stub"
+
+
+   }
 }

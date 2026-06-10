@@ -3,7 +3,7 @@
 namespace SchoolPalm\ModuleSDK\Console;
 
 use Illuminate\Console\Command;
-use SchoolPalm\ModuleSDK\Core\ModuleRegistry;
+use SchoolPalm\ModuleBridge\Facades\CreatedRegistry;
 
 class ModuleCommandBase extends Command
 {
@@ -12,12 +12,10 @@ class ModuleCommandBase extends Command
      *
      * @return array|null Selected module data or null if cancelled/invalid
      */
-    protected function chooseModule(): ?array
+    protected function chooseModule(?string $filter=null): ?array
     {
 
-
-        $register  = app(ModuleRegistry::class);
-       $choices = $register->listForCLI();
+       $choices = CreatedRegistry::listForCLI($filter);
         if (empty($choices)) {
             $this->error('No modules found, create new modules.');
             return [];
@@ -37,6 +35,6 @@ class ModuleCommandBase extends Command
         }
 
         // Return module from registry
-        return $register->find($selectedId);
+        return CreatedRegistry::find($selectedId);
     }
 }

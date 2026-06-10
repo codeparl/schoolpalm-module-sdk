@@ -1,0 +1,130 @@
+// utils/string.ts
+
+/**
+ * Get the part of a string before the first occurrence of a character
+ */
+export function before(str: string, char: string): string {
+  const index = str.indexOf(char)
+  return index === -1 ? str : str.substring(0, index)
+}
+
+/**
+ * Get the part of a string after the first occurrence of a character
+ */
+export function after(str: string, char: string): string {
+  const index = str.indexOf(char)
+  return index === -1 ? str : str.substring(index + 1)
+}
+
+/**
+ * Get the part of a string before the last occurrence of a character
+ */
+export function beforeLast(str: string, char: string): string {
+  const index = str.lastIndexOf(char)
+  return index === -1 ? str : str.substring(0, index)
+}
+
+/**
+ * Get the part of a string after the last occurrence of a character
+ */
+export function afterLast(str: string, char: string): string {
+  const index = str.lastIndexOf(char)
+  return index === -1 ? str : str.substring(index + 1)
+}
+
+/**
+ * Convert string to Title Case
+ */
+export function titleCase(str: string): string {
+  return str
+    .replace(/[-_.]/g, ' ') // 🔥 fixed: global replace
+    .split(' ')
+    .filter(Boolean)
+    .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(' ')
+}
+
+/**
+ * Allowed route keys (type-safe)
+ */
+export type RouteSegmentKey =
+  | 'root'
+  | 'context'
+  | 'module'
+  | 'action'
+  | 'id'
+
+export function routeSegment(
+  path: string = '',
+  key: RouteSegmentKey = 'module'
+): string | null {
+
+  const parts: string[] = (path || (typeof window !== 'undefined'
+    ? window.location.pathname
+    : ''))
+    .split('/')
+    .filter(p => p.trim() !== '')
+
+  /**
+   * Fixed schema:
+   * root / context / module / action / id
+   */
+  const map: Record<RouteSegmentKey, number> = {
+    root: 0,
+    context: 1,
+    module: 2,
+    action: 3,
+    id: 4
+  }
+
+  return parts[map[key]] ?? null
+}
+
+/**
+ * Check if text contains a whole word token
+ */
+export function contains(text: string, token: string): boolean {
+  if (!text || !token) return false
+  const regex = new RegExp(`\\b${token}\\b`)
+  return regex.test(text)
+}
+
+/**
+ * Allowed reverse route keys
+ */
+export type RouteSegmentEndKey = 'action' | 'module' | 'portal' | 'root'
+
+/**
+ * Extract route segment from the end
+ */
+export function routeSegmentEnd(
+  path: string = '',
+  key: RouteSegmentEndKey = 'action'
+): string | null {
+  const map: Record<RouteSegmentEndKey, number> = {
+    action: 0,
+    module: 1,
+    portal: 2,
+    root: 2
+  }
+
+  const parts: string[] = (path || (typeof window !== 'undefined' ? window.location.pathname : ''))
+    .split('/')
+    .filter(p => p.trim() !== '')
+
+  const indexFromEnd = map[key]
+
+  return parts[parts.length - 1 - indexFromEnd] ?? null
+}
+
+
+export function componentName(path:string) {
+    let comp  = routeSegment(path,'action')
+    if(comp) return comp
+
+    comp  = routeSegment(path,'module')
+    if(comp) return 'dashboard'
+
+    return 'dashboard'
+
+}

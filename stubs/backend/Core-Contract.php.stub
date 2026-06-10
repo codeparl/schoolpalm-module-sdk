@@ -1,0 +1,118 @@
+<?php
+
+namespace {{ namespace }};
+
+/**
+ * INTERNAL VENDOR CONTRACT
+ *
+ * This contract is PRIVATE to the module.
+ * It is NOT exposed outside the module boundary.
+ *
+ * IMPORTANT RULE:
+ * This layer MUST NOT enforce DTO usage.
+ * It operates on:
+ * - arrays
+ * - scalar IDs
+ * - collections (array|\Traversable)
+ *
+ * DTO mapping is handled in Service Layer.
+ */
+interface {{ class }}
+{
+    /*
+    |--------------------------------------------------------------------------
+    | READ OPERATIONS
+    |--------------------------------------------------------------------------
+    */
+
+    public function find(int|string $id): ?array;
+
+    public function findMany(array $ids): array;
+
+    public function all(): array;
+
+    public function search(array $filters): array;
+
+    public function findBy(array $criteria): array;
+
+    public function findOneBy(array $criteria): ?array;
+
+    public function exists(int|string $id): bool;
+
+    /*
+    |--------------------------------------------------------------------------
+    | CREATE (PERSISTENCE)
+    |--------------------------------------------------------------------------
+    */
+
+    public function store(array $data): array;
+
+    /*
+    |--------------------------------------------------------------------------
+    | UPDATE (PERSISTENCE)
+    |--------------------------------------------------------------------------
+    */
+
+    public function update(int|string $id, array $data): bool;
+
+    public function updateMany(array $criteria, array $data): int;
+
+    /*
+    |--------------------------------------------------------------------------
+    | DELETE (PERSISTENCE)
+    |--------------------------------------------------------------------------
+    */
+
+    public function delete(int|string $id): bool;
+
+    public function deleteMany(array $criteria): int;
+
+    /*
+    |--------------------------------------------------------------------------
+    | COLLECTION OPERATIONS
+    |--------------------------------------------------------------------------
+    */
+
+    public function paginate(
+        int $page = 1,
+        int $perPage = 15,
+        array $filters = [],
+        array $sort = []
+    ): array;
+
+    public function count(array $filters = []): int;
+
+    /*
+    |--------------------------------------------------------------------------
+    | BULK PROCESSING
+    |--------------------------------------------------------------------------
+    */
+
+    public function chunk(int $size, callable $callback): void;
+
+    public function cursor(array $filters = []): iterable;
+
+    /*
+    |--------------------------------------------------------------------------
+    | AGGREGATIONS
+    |--------------------------------------------------------------------------
+    */
+
+    public function aggregate(string $function, string $field, array $filters = []): mixed;
+
+    public function sum(string $field, array $filters = []): float|int;
+
+    public function avg(string $field, array $filters = []): float;
+
+    public function min(string $field, array $filters = []): mixed;
+
+    public function max(string $field, array $filters = []): mixed;
+
+    /*
+    |--------------------------------------------------------------------------
+    | RAW ACCESS (OPTIONAL ESCAPE HATCH)
+    |--------------------------------------------------------------------------
+    */
+
+    public function raw(): mixed;
+}

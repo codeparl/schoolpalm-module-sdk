@@ -1,0 +1,26 @@
+// resources/js/quasar.js
+import 'quasar/src/css/index.sass'
+import { Quasar, Dialog, Notify, Loading, QBtn } from 'quasar'
+import '@quasar/extras/material-icons/material-icons.css'
+import { Dark  } from 'quasar'
+
+
+
+export default (app) => {
+
+  app.use(Quasar, {
+     config: {
+    brand: {
+      primary: '#1976D2',
+      secondary: '#FF9800',
+    },
+    framework: {
+  iconSet: 'material-icons',
+}
+  },
+
+    plugins: { Dialog, Notify, Loading,QBtn }
+  })
+
+
+}

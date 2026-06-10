@@ -1,0 +1,75 @@
+import { defineConfig } from 'vite'
+import vue from '@vitejs/plugin-vue'
+import { quasar, transformAssetUrls } from '@quasar/vite-plugin'
+import path from 'path'
+import fs from 'fs'
+
+const moduleInfo  = {{ moduleInfo }}
+
+const MODULE_DIR = moduleInfo.path
+const MODULE_NAME = moduleInfo.module_key
+const entryFile = path.join(MODULE_DIR,'Frontend', 'index.ts')
+
+if (!fs.existsSync(entryFile)) {
+  throw new Error(`Entry file not found: ${entryFile}`)
+}
+
+export default defineConfig({
+  plugins: [
+    vue({ template: { transformAssetUrls } }),
+    quasar(),
+  ],
+
+  // 🔥 CRITICAL: tells Vite where chunks live
+  //base: `/build/modules/${moduleInfo.relative_path}/`,
+
+  build: {
+    outDir: path.resolve(MODULE_DIR,'Frontend', 'dist'),
+    emptyOutDir: true,
+    manifest: 'manifest.json',
+    rollupOptions: {
+      input: entryFile,
+      output: {
+        entryFileNames: `${moduleInfo.name}.js`,
+        chunkFileNames: `${moduleInfo.name}-[name]-[hash].js`,
+
+        assetFileNames: (asset) => {
+          const ext = path.extname(asset.name ?? '')
+
+          // Fonts
+          if (/\.(woff2?|ttf|eot|otf)$/.test(ext)) {
+            return 'assets/fonts/[name][extname]'
+          }
+
+          // Entry CSS vs chunk CSS
+          if (ext === '.css') {
+            return asset.name?.includes('index')
+              ? `${moduleInfo.name}.css`
+              : `${moduleInfo.name}-[name]-[hash].css`
+          }
+
+          return 'assets/[name][extname]'
+        },
+      },
+    },
+
+    target: 'esnext',
+    cssCodeSplit: true,
+  },
+
+  resolve: {
+    alias: {
+      '@': path.resolve(MODULE_DIR, 'Frontend'),
+    },
+  },
+
+  server: {
+    port: {{ port }},
+    strictPort: true,
+    cors: true,
+    hmr: {
+      protocol: 'ws',
+      host: 'localhost',
+    },
+  },
+})

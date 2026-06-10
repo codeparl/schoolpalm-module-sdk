@@ -1,0 +1,14 @@
+<?php
+
+namespace {{ namespace }};
+
+class {{ class }}
+{
+    /**
+     * DTO for cross-module communication.
+     *
+     * Define only the fields required by your contract methods.
+     * Avoid adding internal model-only fields.
+     */
+
+}

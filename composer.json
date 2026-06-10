@@ -39,6 +39,9 @@
     "inertiajs/inertia-laravel": "^2.0",
     "schoolpalm/module-bridge": "@dev"
   },
+  "conflict": {
+  "laravel/framework": ">=13.0"
+},
 
   "suggest": {
     "@inertiajs/inertia-vue3": "JS Vue3 adapter for Inertia",

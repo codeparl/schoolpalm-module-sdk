@@ -1,0 +1,55 @@
+// scripts/build-all.js
+import fs from 'fs'
+import path from 'path'
+import { spawn } from 'child_process'
+
+const ROOT = process.cwd()
+const MODULES_DIR = path.join(ROOT, 'modules')
+
+const moduleList = {{ modules }}
+
+
+// Build a single module
+const buildModule = (moduleName, modulePath) => {
+  return new Promise((resolve, reject) => {
+    const moduleFrontendPath = path.join(MODULES_DIR, modulePath, 'Frontend')
+    console.log(`\n📦 Building module: ${moduleName}`)
+
+    const proc = spawn('pnpm', ['run', 'build'], {
+      cwd: moduleFrontendPath,
+      stdio: 'inherit',
+      shell: true,
+    })
+
+    proc.on('close', (code) => {
+      if (code === 0) {
+        console.log(`✅ Module built: ${moduleName}`)
+        resolve()
+      } else {
+        console.error(`❌ Build failed for module: ${moduleName}`)
+        reject(new Error(`Module ${moduleName} build failed with code ${code}`))
+      }
+    })
+  })
+}
+
+
+// Main: loop through all modules sequentially
+const main = async () => {
+if (!moduleList) {
+  console.log('No modules found to build.')
+  return
+}
+  for (const name in moduleList) {
+    const module = moduleList[name];
+    try {
+      await buildModule(name, module.path)
+    } catch (err) {
+      console.error(err)
+    }
+  }
+
+  console.log('\n🎉 All modules processed.')
+}
+
+main()

@@ -5,7 +5,9 @@ namespace SchoolPalm\ModuleSDK\Helpers;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Str;
 use SchoolPalm\ModuleBridge\Support\Helper as BridgeHelper;
-use SchoolPalm\ModuleSDK\Models\Module;
+use SchoolPalm\ModuleBridge\Support\LevelManager;
+use SchoolPalm\ModuleSDK\ModuleSDKServiceProvider;
+use Symfony\Component\HttpFoundation\Request;
 
 class Helper
 {
@@ -14,8 +16,10 @@ class Helper
      */
     public static function moduleFolderName($module): string
     {
-       return BridgeHelper::moduleFolderName($module);
+        return BridgeHelper::moduleFolderName($module);
     }
+
+    
 
     /**
      * Convert role name to folder-friendly string
@@ -29,27 +33,10 @@ class Helper
      * Convert multiple levels into combined folder string
      */
 
-public static function levelsFolderName(array $levels): string
-{
-    // Handle common module
-    if (empty($levels) || in_array(0, $levels, true)) {
-        return 'Common';
+    public static function levelsFolderName(array $levels): string
+    {
+        return LevelManager::level(ModuleSDKServiceProvider::$academicLevels)->joinByCodes($levels);
     }
-
-    // Single level → StudlyCase label OR code
-    if (count($levels) === 1) {
-        $level = AcademicLevelManager::getByNumber((int) $levels[0]);
-
-        return $level
-            ? Str::studly($level['code'])
-            : 'Common';
-    }
-
-    // Multiple levels → Join by codes
-    return AcademicLevelManager::joinByCodes(
-        array_map('intval', $levels)
-    );
-}
 
 
     /**
@@ -57,7 +44,7 @@ public static function levelsFolderName(array $levels): string
      */
     public static function levelExists(string $level, string $folderName): bool
     {
-        return AcademicLevelManager::levelExists($level,$folderName);
+        return LevelManager::level(ModuleSDKServiceProvider::$academicLevels)->levelExists($level, $folderName);
     }
 
     /**
@@ -84,25 +71,30 @@ public static function levelsFolderName(array $levels): string
      */
     public static function levelByKey($index)
     {
-        return AcademicLevelManager::getByNumber($index)['code'];
+        return LevelManager::level(ModuleSDKServiceProvider::$academicLevels)->getByNumber($index)['code'];
     }
 
 
     public static function loadJson(string $file): ?array
     {
+
         return BridgeHelper::loadJson($file);
     }
 
-
-
-    public static   function getRouteSegment(string $key, bool $ref = false, $path = null): ?string
+ public static function storeJson(string $filePath, array $data):bool
     {
-        return BridgeHelper::getPathSegment($key,$ref);
+        return BridgeHelper::storeJson($filePath, $data);
+    }
+
+    public static   function getRouteSegment(string $key,  $path = null,string $mode = 'full'): ?string
+    {
+        $path  =  $path ? $path: implode('/',request()->segments());
+        return  BridgeHelper::getPathSegment($key, $path, $mode);
     }
 
 
-  public static  function normalizeModuleName(string $module): ?string
-{
-  return   BridgeHelper::normalizeModuleName($module);
-}
+    public static  function normalizeModuleName(string $module): ?string
+    {
+        return   BridgeHelper::normalizeModuleName($module);
+    }
 }

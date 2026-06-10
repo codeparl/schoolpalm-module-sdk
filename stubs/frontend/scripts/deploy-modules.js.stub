@@ -1,0 +1,31 @@
+import fs from 'fs-extra';
+import path from 'path';
+
+const ROOT = process.cwd()
+const MODULES_DIR = path.join(ROOT, 'modules');
+const PUBLIC_MODULES_DIR = path.join(ROOT, 'public', 'build', 'modules');
+
+const moduleList = {{ modules }}
+
+
+const deploy = ()=>{
+  if (!moduleList) {
+  console.log('No modules found to deploy.')
+  return
+}
+fs.ensureDirSync(PUBLIC_MODULES_DIR);
+
+for (const name in moduleList) {
+  const module = moduleList[name];
+  const distDir = path.join(MODULES_DIR, module.path, 'Frontend', 'dist');
+  if (fs.existsSync(distDir)) {
+    const destDir = path.join(PUBLIC_MODULES_DIR, module.path);
+    fs.copySync(distDir, destDir);
+    console.log(`✅ Copied module ${name} to public/build/modules/${module.path}`);
+  }
+}
+}
+
+deploy()
+
+

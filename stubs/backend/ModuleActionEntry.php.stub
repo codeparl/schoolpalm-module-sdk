@@ -1,0 +1,101 @@
+<?php
+
+namespace {{ namespace }};
+
+use SchoolPalm\ModuleBridge\Core\ActionResolver;
+
+/**
+ * --------------------------------------------------------------------------
+ * ModuleActionEntry
+ * --------------------------------------------------------------------------
+ *
+ * This class acts as the main entry point for all module runtime actions
+ * in the SchoolPalm system.
+ *
+ * It extends the ActionResolver which automatically resolves incoming
+ * requests and dispatches them to the appropriate Action classes and
+ * handler methods.
+ *
+ * --------------------------------------------------------------------------
+ * HOW IT WORKS
+ * --------------------------------------------------------------------------
+ *
+ * When a request hits a module endpoint such as:
+ *
+ *      student/add-student
+ *
+ * The SchoolPalm runtime will:
+ *
+ * 1. Load this ModuleActionEntry class
+ * 2. Resolve the target Action class
+ * 3. Call the appropriate handler method
+ *
+ * Example resolution:
+ *
+ * URL Endpoint:
+ *      student/add-student
+ *
+ * Action class:
+ *      StudentAction
+ *
+ * Handler method:
+ *      runAddStudent()
+ *
+ * --------------------------------------------------------------------------
+ * ACTION HANDLER RULE
+ * --------------------------------------------------------------------------
+ *
+ * All action handler methods MUST follow this format:
+ *
+ *      run{ActionName}()
+ *
+ * Examples:
+ *
+ * URL Endpoint              → Handler Method
+ * ------------------------------------------------
+ * student/add-student       → runAddStudent()
+ * student/list-students     → runListStudents()
+ * staff/update-staff        → runUpdateStaff()
+ *
+ * --------------------------------------------------------------------------
+ * ACTION CLASS RESPONSIBILITY
+ * --------------------------------------------------------------------------
+ *
+ * Action classes should:
+ *
+ * - Handle incoming request data
+ * - Call module Service APIs
+ * - Return formatted responses (usually JSON)
+ *
+ * Business logic should be implemented inside Service classes
+ * and NOT directly inside Action classes.
+ *
+ * Example:
+ *
+ * public function runAddStudent()
+ * {
+ *     $data = request()->all();
+ *
+ *     return response()->json([
+ *         'data' => StudentService::store($data)
+ *     ]);
+ * }
+ *
+ * --------------------------------------------------------------------------
+ * NOTE
+ * --------------------------------------------------------------------------
+ *
+ * Developers normally DO NOT modify this class unless they need to
+ * customize the action resolution behaviour.
+ *
+ */
+
+class ModuleActionEntry extends ActionResolver
+{
+    public function __construct()
+    {
+        parent::__construct();
+    }
+}
+
+

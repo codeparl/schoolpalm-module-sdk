@@ -1,0 +1,12 @@
+<?php
+
+namespace {{ namespace }};
+class Module{
+
+public static string $key ='{{ module_key }}';
+public static string $name ='{{ module }}';
+public static string $namespace ='{{ namespace }}';
+
+
+
+}

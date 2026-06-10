@@ -5,7 +5,7 @@ namespace SchoolPalm\ModuleSDK\Console;
 use Illuminate\Support\Facades\File;
 use SchoolPalm\ModuleSDK\Manifest\ManifestValidator;
 use SchoolPalm\ModuleSDK\Manifest\ManifestFactory;
-use SchoolPalm\ModuleSDK\ModuleSDKServiceProvider;
+use SchoolPalm\ModuleSDK\Support\ModulePaths;
 
 class ValidateModuleCommand extends ModuleCommandBase
 {
@@ -32,6 +32,7 @@ class ValidateModuleCommand extends ModuleCommandBase
 
         $manifest = ManifestFactory::loadManifest($manifestFile);
 
+        
 
         if ($manifest === null) {
             $this->error("Failed to parse manifest.json. Invalid JSON.");

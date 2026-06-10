@@ -13,7 +13,7 @@ use SchoolPalm\ModuleSDK\Support\ModulePaths;
 
 class ManifestValidator
 {
-    public static function validate(array $manifest,$command=null): bool
+    public static function validate(array $manifest,$command=null): array
     {
         $schemaPath = ModulePaths::schemaPath();
 
@@ -48,7 +48,13 @@ class ManifestValidator
         $formatter = new ErrorFormatter();
 
         if ($result->isValid()) {
-            return true;
+            return [];
+        }
+
+        if($command == null){
+            throw ValidationException::withMessages(
+            $formatter->format($result->error())
+        );
         }
 
         // Custom formatting using object property access
@@ -77,14 +83,16 @@ class ManifestValidator
         }else
         echo "✖ Manifest validation failed:\n";
 
+        $errorBug = [];
         foreach ($errors as $errorGroup) {
             foreach ($errorGroup as $error) {
                 $path = $error['path'] ?? '(root)';
                 $message = $error['message'] ?? 'Unknown error';
                 echo "   • {$path}: {$message}\n";
+                $errorBug[] = " {$path}: {$message}";
             }
         }
 
-        return false;
+        return $errorBug;
     }
 }

@@ -7,7 +7,10 @@
     "name",
     "vendor",
     "module_key",
+    "namespace",
+    "prefix",
     "description",
+    "sdk",
     "version",
     "type",
     "menus",
@@ -40,6 +43,16 @@
         "pattern": "Vendor name can only contain lowercase letters, numbers, underscores or hyphens, and must start with a letter"
       }
     },
+     "prefix": {
+      "type": "string",
+      "minLength": 2,
+      "pattern": "^[a-z][a-z_-]*$",
+      "$error": {
+        "type": "prefix must be a string",
+        "minLength": "prefix must have at least 2 characters",
+        "pattern": "module Prefix name can only contain lowercase letters,  underscores or hyphens, and must start with a letter"
+      }
+    },
     "module_key": {
       "type": "string",
       "pattern": "^[a-z][a-z0-9_-]*\\.[a-z][a-z0-9_]*$",
@@ -47,12 +60,45 @@
         "pattern": "Module key must be in the format 'vendor.module_name', lowercase letters, numbers, underscores, hyphens"
       }
     },
+    "namespace": {
+  "type": "string",
+  "pattern": "^[a-z][a-z0-9]*\\\\([A-Z][a-zA-Z0-9]*)(\\\\[A-Z][a-zA-Z0-9]*)*$",
+  "$error": {
+    "pattern": "Module namespace must be in the format 'vendor\\Module' or 'vendor\\Module\\SubModule',  CamelCase module names"
+  }
+},
     "description": {
       "type": "string",
       "$error": {
         "type": "Description must be a string"
       }
     },
+    "sdk": {
+  "type": "object",
+  "required": ["name", "version"],
+  "additionalProperties": false,
+  "properties": {
+    "name": {
+      "type": "string",
+      "minLength": 1,
+      "$error": {
+        "type": "SDK name must be a non-empty string"
+      }
+    },
+    "version": {
+      "type": "string",
+      "pattern": "^[~^<>!=]*\\d+\\.\\d+(\\.\\d+)?",
+      "$error": {
+        "type": "SDK version must be a valid composer version constraint"
+      }
+    }
+  },
+  "$error": {
+    "required": "SDK section is required and must define name and version",
+    "additionalProperties": "SDK section allows only 'name' and 'version'"
+  }
+},
+
     "author": {
       "type": "object",
       "additionalProperties": false,
@@ -166,28 +212,46 @@
 },
 
 
-      "dependencies": {
+    "dependencies": {
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "backend": {
       "type": "object",
       "additionalProperties": false,
+      "default": {},
       "properties": {
-        "backend": {
-          "type": "object",
-          "additionalProperties": { "type": "string" },
-          "default": {},
-          "$error": {
-            "type": "Backend dependencies must be an object with composer version strings"
-          }
+        "php": {
+          "type": "string",
+          "pattern": "^[\\^~><=0-9\\.\\|\\s]+$",
+          "description": "PHP version constraint (composer-style)"
         },
-        "frontend": {
+        "extensions": {
           "type": "object",
-          "additionalProperties": { "type": "string" },
+          "additionalProperties": {
+            "type": "string"
+          },
           "default": {},
-          "$error": {
-            "type": "Frontend dependencies must be an object with NPM version strings"
-          }
+          "description": "Required PHP extensions"
+        },
+        "packages": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          },
+          "default": {},
+          "description": "Composer packages required by the module"
         }
+      },
+      "$error": {
+        "type": "Backend dependencies must define php, extensions, and/or packages"
       }
-    },
+    }
+
+ 
+
+  }
+},
 
        "level": {
       "type": "array",
@@ -200,6 +264,26 @@
         "uniqueItems": "Level numbers must be unique"
       }
     },
+    "curricula": {
+  "type": "array",
+  "items": {
+    "type": "object",
+    "required": ["level_id", "curriculum_ids"],
+    "properties": {
+      "level_id": { "type": "number" },
+      "curriculum_ids": {
+        "type": "array",
+        "items": { "type": "number" },
+        "minItems": 1
+      }
+    }
+  },
+  "default": [],
+  "$error": {
+    "type": "Curricula must be an array of objects linking levels to curriculum IDs"
+  }
+},
+
     "is_common": {
       "type": "boolean",
       "default": false,
@@ -226,14 +310,62 @@
       }
     },
 
-      "migrations": {
-      "type": "object",
-      "properties": {
-        "path": { "type": "string", "$error": { "type": "Migration path must be a string" } },
-        "run_on_install": { "type": "boolean", "$error": { "type": "run_on_install must be boolean" } },
-        "run_on_update": { "type": "boolean", "$error": { "type": "run_on_update must be boolean" } }
+    "migrations": {
+  "type": "object",
+  "items": {
+    "type": "object",
+    "properties": {
+
+      "path": {
+        "type": "string",
+        "$error": {
+          "type": "Migration path must be a string"
+        }
+      },
+
+      "run_on_install": {
+        "type": "boolean",
+        "default": true,
+        "$error": {
+          "type": "run_on_install must be boolean"
+        }
+      },
+
+      "run_on_update": {
+        "type": "boolean",
+        "default": false,
+        "$error": {
+          "type": "run_on_update must be boolean"
+        }
+      },
+
+      "tables": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "properties": {
+
+            "name": {
+              "type": "string",
+              "$error": {
+                "type": "Table name must be a string"
+              }
+            },
+
+            "model": {
+              "type": "boolean",
+              "default": false
+            }
+
+          }
+         
+        }
       }
-    },
+
+    }
+    
+  }
+},
 
     "models": {
       "type": "object",

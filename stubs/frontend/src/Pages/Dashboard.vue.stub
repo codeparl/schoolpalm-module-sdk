@@ -1,0 +1,9 @@
+  <template>
+    <div class="">
+        <h1 class="p-4 bg-red-500 ">dshaboard</h1>
+    </div>
+</template>
+
+<script setup lang="ts" >
+
+</script>

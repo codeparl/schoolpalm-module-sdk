@@ -1,0 +1,443 @@
+<?php
+
+namespace {{ namespace }};
+
+use Closure;
+use {{ engineNamespace }};
+use SchoolPalm\ModuleBridge\Context\CurrentContext;
+use SchoolPalm\ModuleBridge\Query\ContractQueryBuilder;
+use SchoolPalm\ModuleBridge\Relations\RelationEngine;
+
+/**
+ * BASE SERVICE CLASS
+ *
+ * Thin proxy layer over ContractQueryBuilder + Engine.
+ * Ensures module boundary + fluent API consistency.
+ */
+abstract class BaseService
+{
+    /*
+    |--------------------------------------------------------------------------
+    | MODULE CONFIG
+    |--------------------------------------------------------------------------
+    */
+
+    protected string $moduleKey = '{{ moduleKey }}';
+
+    protected bool $enforceContext = true;
+
+    /*
+    |--------------------------------------------------------------------------
+    | ENGINE
+    |--------------------------------------------------------------------------
+    */
+
+    protected {{ engineClass }} $engine;
+
+    public function __construct(?{{ engineClass }} $engine = null)
+    {
+        if ($this->enforceContext) {
+            CurrentContext::require($this->moduleKey);
+        }
+
+        $this->engine = $engine ?? new {{ engineClass }}();
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | QUERY ENTRY
+    |--------------------------------------------------------------------------
+    */
+
+    public function query(): ContractQueryBuilder
+    {
+        return ContractQueryBuilder::for(
+            $this,
+            app(RelationEngine::class)
+        );
+    }
+
+    public function newQuery(): ContractQueryBuilder
+    {
+        return $this->query();
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | WHERE API (FULL PARITY)
+    |--------------------------------------------------------------------------
+    */
+
+    public function where(string $field, mixed $value, string $operator = '='): ContractQueryBuilder
+    {
+        return $this->query()->where($field, $value, $operator);
+    }
+
+    public function orWhere(string $field, mixed $value, string $operator = '='): ContractQueryBuilder
+    {
+        return $this->query()->orWhere($field, $value, $operator);
+    }
+
+    public function whereIn(string $field, array $values): ContractQueryBuilder
+    {
+        return $this->query()->whereIn($field, $values);
+    }
+
+    public function whereNotIn(string $field, array $values): ContractQueryBuilder
+    {
+        return $this->query()->whereNotIn($field, $values);
+    }
+
+    public function whereNull(string $field): ContractQueryBuilder
+    {
+        return $this->query()->whereNull($field);
+    }
+
+    public function whereNotNull(string $field): ContractQueryBuilder
+    {
+        return $this->query()->whereNotNull($field);
+    }
+
+    public function whereLike(string $field, string $value): ContractQueryBuilder
+    {
+        return $this->query()->whereLike($field, $value);
+    }
+
+    public function whereBetween(string $field, array $range): ContractQueryBuilder
+    {
+        return $this->query()->whereBetween($field, $range);
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | SELECT
+    |--------------------------------------------------------------------------
+    */
+
+    public function select(array|string ...$fields): ContractQueryBuilder
+    {
+        return $this->query()->select(...$fields);
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | RELATIONS
+    |--------------------------------------------------------------------------
+    */
+
+    public function with(...$relations): ContractQueryBuilder
+    {
+        return $this->query()->with(...$relations);
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | SORTING
+    |--------------------------------------------------------------------------
+    */
+
+    public function orderBy(string $field, string $direction = 'asc'): ContractQueryBuilder
+    {
+        return $this->query()->orderBy($field, $direction);
+    }
+
+    public function latest(string $field = 'created_at'): ContractQueryBuilder
+    {
+        return $this->query()->latest($field);
+    }
+
+    public function oldest(string $field = 'created_at'): ContractQueryBuilder
+    {
+        return $this->query()->oldest($field);
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | GROUPING
+    |--------------------------------------------------------------------------
+    */
+
+    public function groupBy(string ...$fields): ContractQueryBuilder
+    {
+        return $this->query()->groupBy(...$fields);
+    }
+
+    public function having(string $field, string $operator, mixed $value): ContractQueryBuilder
+    {
+        return $this->query()->having($field, $operator, $value);
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | LIMIT / OFFSET
+    |--------------------------------------------------------------------------
+    */
+
+    public function limit(int $limit): ContractQueryBuilder
+    {
+        return $this->query()->limit($limit);
+    }
+
+    public function take(int $limit): ContractQueryBuilder
+    {
+        return $this->query()->take($limit);
+    }
+
+    public function offset(int $offset): ContractQueryBuilder
+    {
+        return $this->query()->offset($offset);
+    }
+
+    public function skip(int $offset): ContractQueryBuilder
+    {
+        return $this->query()->skip($offset);
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | EXECUTION
+    |--------------------------------------------------------------------------
+    */
+
+    public function get(): array
+    {
+        return $this->query()->get();
+    }
+
+    public function first(): mixed
+    {
+        return $this->query()->first();
+    }
+
+    public function last(): mixed
+    {
+        return $this->query()->last();
+    }
+
+    public function paginate(int $page = 1, int $perPage = 15): array
+    {
+        return $this->query()->paginate($page, $perPage);
+    }
+
+    public function count(): int
+    {
+        return $this->query()->count();
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | COLLECTION HELPERS
+    |--------------------------------------------------------------------------
+    */
+
+    public function pluck(string $field, ?string $key = null): array
+    {
+        return $this->query()->pluck($field);
+    }
+
+    public function map(callable $callback): array
+    {
+        return $this->query()->map($callback);
+    }
+
+    public function filter(?callable $callback = null): array
+    {
+        return $this->query()->filter($callback);
+    }
+
+    public function each(callable $callback): static
+    {
+        $this->query()->each($callback);
+        return $this;
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | CONDITIONALS
+    |--------------------------------------------------------------------------
+    */
+
+    public function when(mixed $condition, callable $callback, ?callable $default = null): ContractQueryBuilder
+    {
+        return $this->query()->when($condition, $callback, $default);
+    }
+
+    public function unless(mixed $condition, callable $callback): ContractQueryBuilder
+    {
+        return $this->query()->unless($condition, $callback);
+    }
+
+    public function tap(callable $callback): ContractQueryBuilder
+    {
+        return $this->query()->tap($callback);
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | RAW BRIDGE (ONLY ENTRY POINT)
+    |--------------------------------------------------------------------------
+    */
+
+    public function querySearch(array $filters): array
+    {
+        return empty($filters)
+            ? $this->rawAll()
+            : $this->rawSearch($filters);
+    }
+
+    public function queryAll(): array
+    {
+        return $this->rawAll();
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | ENGINE RAW ACCESS
+    |--------------------------------------------------------------------------
+    */
+
+    /*
+    |--------------------------------------------------------------------------
+    | RAW FIND / SEARCH BY CRITERIA
+    |--------------------------------------------------------------------------
+    */
+
+    protected function rawFindBy(array $criteria): array
+    {
+        return $this->engine->findBy($criteria);
+    }
+
+    protected function rawFindOneBy(array $criteria): ?array
+    {
+        return $this->engine->findOneBy($criteria);
+    }
+    protected function rawFind(int|string $id): ?array
+    {
+        return $this->engine->find($id);
+    }
+
+    protected function rawFindMany(array $ids): array
+    {
+        return $this->engine->findMany($ids);
+    }
+
+    protected function rawSearch(array $filters): array
+    {
+        return $this->engine->search($filters);
+    }
+
+    protected function rawAll(): array
+    {
+        return $this->engine->all();
+    }
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | RAW ACCESS
+    |--------------------------------------------------------------------------
+    */
+
+    protected function raw(): mixed
+    {
+        return $this->engine->raw();
+    }
+
+    /*
+|--------------------------------------------------------------------------
+| DTO CORE API (SDK GENERATION LAYER)
+|--------------------------------------------------------------------------
+*/
+
+protected function toDto(?array $data, string $dtoClass): mixed
+{
+    return $data ? $dtoClass::fromArray($data) : null;
+}
+
+protected function toDtoCollection(array $items, string $dtoClass): array
+{
+    return array_map(
+        static fn ($item) => $dtoClass::fromArray($item),
+        $items
+    );
+}
+
+/*
+|--------------------------------------------------------------------------
+| DTO QUERY WRAPPERS (IMPORTANT FOR GENERATED SERVICES)
+|--------------------------------------------------------------------------
+*/
+
+protected function findDto(int|string $id, string $dtoClass): mixed
+{
+    return $this->toDto(
+        $this->rawFind($id),
+        $dtoClass
+    );
+}
+
+protected function findManyDto(array $ids, string $dtoClass): array
+{
+    return $this->toDtoCollection(
+        $this->rawFindMany($ids),
+        $dtoClass
+    );
+}
+
+protected function searchDto(array $filters, string $dtoClass): array
+{
+    return $this->toDtoCollection(
+        $this->rawSearch($filters),
+        $dtoClass
+    );
+}
+
+protected function allDto(string $dtoClass): array
+{
+    return $this->toDtoCollection(
+        $this->rawAll(),
+        $dtoClass
+    );
+}
+
+protected function findByDto(array $criteria, string $dtoClass): array
+{
+    return $this->toDtoCollection(
+        $this->rawFindBy($criteria),
+        $dtoClass
+    );
+}
+
+protected function findOneByDto(array $criteria, string $dtoClass): mixed
+{
+    return $this->toDto(
+        $this->rawFindOneBy($criteria),
+        $dtoClass
+    );
+}
+
+protected function paginateDto(
+    int $page,
+    int $perPage,
+    array $filters,
+    string $dtoClass,
+    array $sort = []
+): array {
+
+    $result = $this->engine->paginate(
+        $page,
+        $perPage,
+        $filters,
+        $sort
+    );
+
+    return [
+        'data' => $this->toDtoCollection(
+            $result['data'] ?? [],
+            $dtoClass
+        ),
+
+        'meta' => $result['meta'] ?? [],
+    ];
+}
+}

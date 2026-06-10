@@ -1,0 +1,78 @@
+<?php
+
+namespace {{ namespace }};
+
+/**
+ * --------------------------------------------------------------------------
+ * {{ class }}
+ * --------------------------------------------------------------------------
+ *
+ * Action classes act as endpoint handlers in the SchoolPalm runtime.
+ * Each public method inside this class represents an endpoint action.
+ *
+ * --------------------------------------------------------------------------
+ * ACTION HANDLER RULE
+ * --------------------------------------------------------------------------
+ *
+ * Each handler MUST follow this naming convention:
+ *
+ *      run{ActionName}()
+ *
+ * The action name is derived from the URL endpoint.
+ *
+ * Examples:
+ *
+ * URL Endpoint            →   Method Name
+ * ------------------------------------------------
+ * student/add-student     →   runAddStudent()
+ * student/list-staff      →   runListStaff()
+ * staff/update-staff      →   runUpdateStaff()
+ *
+ * --------------------------------------------------------------------------
+ * RESPONSIBILITY
+ * --------------------------------------------------------------------------
+ *
+ * Action handlers should:
+ *
+ * 1. Receive request data
+ * 2. Call module Service APIs
+ * 3. Return formatted responses (usually JSON)
+ *
+ * Business logic should NOT be written here.
+ * Instead, delegate logic to the module Service classes.
+ *
+ * --------------------------------------------------------------------------
+ * EXAMPLE
+ * --------------------------------------------------------------------------
+ *
+ * public function runAddStudent()
+ * {
+ *     $data = request()->all();
+ *
+ *     return response()->json([
+ *         'data' => StudentService::store($data)
+ *     ]);
+ * }
+ *
+ */
+
+class {{ class }}
+{
+    /**
+     * Module runtime instance.
+     *
+     * Provides access to module services and runtime utilities.
+     */
+    protected $main;
+
+    /**
+     * Create a new Action instance.
+     */
+    public function __construct($main)
+    {
+        $this->main = $main;
+    }
+
+    
+}
+

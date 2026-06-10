@@ -1,0 +1,11 @@
+<script lang="ts" setup>
+import { Dark } from 'quasar'
+</script>
+
+<template>
+   <div  class="p-4 h-[100vh]"      :class="Dark.isActive ? 'bg-grey-10 text-white' : 'bg-[#ECF0F5] text-dark'">
+    <router-view />
+  </div>
+</template>
+
+

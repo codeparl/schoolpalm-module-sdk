@@ -1,0 +1,146 @@
+<?php
+
+namespace {{ namespace }};
+
+use {{ dtoFqcn }};
+
+/**
+ * PUBLIC READ CONTRACT
+ *
+ * PURPOSE:
+ * Exposes safe cross-module data access APIs.
+ *
+ * CONSUMERS:
+ * - other modules
+ * - RelationEngine
+ * - SDK integrations
+ * - reporting modules
+ * - synchronization services
+ *
+ * RULES:
+ * - DTOs only
+ * - read-only access
+ * - no entity/model exposure
+ * - no write operations
+ * - no QueryBuilder exposure
+ */
+interface {{ class }}
+{
+    /*
+    |--------------------------------------------------------------------------
+    | PRIMARY LOOKUPS
+    |--------------------------------------------------------------------------
+    */
+
+    public function find(int|string $id): ?{{ dto }};
+
+    /**
+     * @return {{ dto }}[]
+     */
+    public function findMany(array $ids): array;
+
+    public function exists(int|string $id): bool;
+
+    /*
+    |--------------------------------------------------------------------------
+    | COLLECTION ACCESS
+    |--------------------------------------------------------------------------
+    */
+
+    /**
+     * @return {{ dto }}[]
+     */
+    public function all(): array;
+
+    /**
+     * @return {{ dto }}[]
+     */
+    public function search(array $filters): array;
+
+    /**
+     * @return {{ dto }}[]
+     */
+    public function findBy(array $criteria): array;
+
+    public function findOneBy(array $criteria): ?{{ dto }};
+
+    /*
+    |--------------------------------------------------------------------------
+    | RELATION-AWARE QUERIES
+    |--------------------------------------------------------------------------
+    */
+
+    /**
+     * @return {{ dto }}[]
+     */
+    public function searchWithRelations(
+        array $filters,
+        array $relations = []
+    ): array;
+
+    /**
+     * @return {{ dto }}[]
+     */
+    public function findByWithRelations(
+        array $criteria,
+        array $relations = []
+    ): array;
+
+    public function findOneByWithRelations(
+        array $criteria,
+        array $relations = []
+    ): ?{{ dto }};
+
+    /*
+    |--------------------------------------------------------------------------
+    | PAGINATION
+    |--------------------------------------------------------------------------
+    |
+    | Returns:
+    | [
+    |   'data' => {{ dto }}[],
+    |   'meta' => array
+    | ]
+    |
+    */
+
+    public function paginate(
+        int $page = 1,
+        int $perPage = 15,
+        array $filters = [],
+        array $sort = []
+    ): array;
+
+    /*
+    |--------------------------------------------------------------------------
+    | META / AGGREGATES
+    |--------------------------------------------------------------------------
+    */
+
+    public function count(array $filters = []): int;
+
+    public function aggregate(
+        string $function,
+        string $field,
+        array $filters = []
+    ): mixed;
+
+    /*
+    |--------------------------------------------------------------------------
+    | PERFORMANCE OPERATIONS
+    |--------------------------------------------------------------------------
+    */
+
+    public function chunk(
+        int $size,
+        callable $callback
+    ): void;
+
+    /**
+     * @return iterable<{{ dto }}>
+     */
+    public function cursor(array $filters = []): iterable;
+
+
+
+}
