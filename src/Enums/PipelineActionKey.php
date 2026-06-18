@@ -4,10 +4,12 @@ namespace SchoolPalm\ModuleSDK\Enums;
 
 enum PipelineActionKey: string
 {
-    case VALIDATE_MANIFEST   = 'validate_manifest';
-    case GENERATE_STRUCTURE  = 'generate_structure';
-    case GENERATE_STUBS      = 'generate_stubs';
-    case FINALIZE            = 'finalize';
+    case VALIDATE_MANIFEST      = 'validate_manifest';
+    case VERIFY_DEPENDENCIES    = 'verify_dependencies';
+    case GENERATE_STRUCTURE     = 'generate_structure';
+    case GENERATE_STUBS         = 'generate_stubs';
+    case INSTALL_DEPENDENCIES   = 'install_dependencies';
+    case FINALIZE               = 'finalize';
 
     /**
      * Return all enum values as array (useful for validation)

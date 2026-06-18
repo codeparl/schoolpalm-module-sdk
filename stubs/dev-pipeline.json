@@ -6,6 +6,12 @@
     "log": ""
   },
   {
+    "key": "verify_dependencies",
+    "name": "Verify Dependencies",
+    "status": "pending",
+    "log": ""
+  },
+  {
     "key": "generate_structure",
     "name": "Generate Folder Structure",
     "status": "pending",
@@ -14,6 +20,12 @@
   {
     "key": "generate_stubs",
     "name": "Generate Stub Files",
+    "status": "pending",
+    "log": ""
+  },
+   {
+    "key": "install_dependencies",
+    "name": "Install Module Dependencies",
     "status": "pending",
     "log": ""
   },

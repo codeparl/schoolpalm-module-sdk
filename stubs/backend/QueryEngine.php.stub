@@ -6,12 +6,15 @@ use Closure;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use {{ modelNamespace }}\{{ modelClass }};
+use SchoolPalm\ModuleBridge\Traits\HasQueryEngineHooks;
 
 /**
  * QUERY ENGINE (MODULE CORE)
  */
 class {{ class }}
 {
+    use HasQueryEngineHooks;
+
     /**
      * Eloquent model instance
      */
@@ -89,6 +92,46 @@ class {{ class }}
         }
 
         return $query;
+    }
+
+    /**
+     * Sanitize a single record payload.
+     * This is now meant to be called from your hook methods.
+     */
+    protected function sanitizePayload(array $data): array
+    {
+        $model = new $this->modelClass;
+
+        foreach ($data as $key => $value) {
+
+            // 1. Remove system fields completely
+            if (in_array($key, [
+                'created_at',
+                'updated_at',
+                'deleted_at',
+                'school_id',
+            ], true)) {
+                unset($data[$key]);
+                continue;
+            }
+
+            // 2. Normalize ISO dates
+            if (
+                $value &&
+                is_string($value) &&
+                method_exists($model, 'isDateAttribute') &&
+                $model->isDateAttribute($key)
+            ) {
+                try {
+                    $data[$key] = \Carbon\Carbon::parse($value)
+                        ->format('Y-m-d H:i:s');
+                } catch (\Throwable $e) {
+                    // ignore invalid dates
+                }
+            }
+        }
+
+        return $data;
     }
 
     /*
@@ -360,41 +403,66 @@ class {{ class }}
 
     /*
     |--------------------------------------------------------------------------
-    | MUTATIONS
+    | MUTATIONS (with hooks)
     |--------------------------------------------------------------------------
     */
 
     public function insert(array $data): array
     {
-        return [$this->model->create($data)];
+        $data = $this->runBeforeInsert($data);
+        $model = $this->model->create($data);
+        $this->runAfterInsert($model, $data);
+        return [$model];
     }
 
     public function insertMany(array $dataSet): array
     {
-        return collect($dataSet)
+        $dataSet = $this->runBeforeInsertMany($dataSet);
+        $results = collect($dataSet)
             ->map(fn($data) => $this->model->create($data))
             ->toArray();
+        $this->runAfterInsertMany($results, $dataSet);
+        return $results;
     }
 
     public function updateById(int|string $id, array $data): bool
     {
-        return (bool) $this->model->where('id', $id)->update($data);
+        $criteria = ['id' => $id];
+        $data = $this->runBeforeUpdate($data, $criteria);
+        $result = (bool) $this->model->where('id', $id)->update($data);
+        $this->runAfterUpdate($result, $data, $criteria);
+        return $result;
     }
 
     public function updateWhere(array $criteria, array $data): int
     {
-        return $this->applyCriteria($criteria)->update($data);
+        $data = $this->runBeforeUpdate($data, $criteria);
+        $result = $this->applyCriteria($criteria)->update($data);
+        $this->runAfterUpdate($result, $data, $criteria);
+        return $result;
     }
 
     public function deleteById(int|string $id): bool
     {
-        return (bool) $this->model->where('id', $id)->delete();
+        $this->runBeforeDelete($id);
+        $result = (bool) $this->model->where('id', $id)->delete();
+        $this->runAfterDelete($result, $id);
+        return $result;
     }
 
     public function deleteWhere(array $criteria): int
     {
-        return $this->applyCriteria($criteria)->delete();
+        $this->runBeforeDelete($criteria);
+        $result = $this->applyCriteria($criteria)->delete();
+        $this->runAfterDelete($result, $criteria);
+        return $result;
     }
+
+    /*
+    |--------------------------------------------------------------------------
+    | HELPERS
+    |--------------------------------------------------------------------------
+    */
 
     protected function applyCriteria(array $criteria): Builder
     {
@@ -417,4 +485,46 @@ class {{ class }}
     {
         return $this->model->newQuery();
     }
+
+
+        protected function beforeInsert(array $data): array
+    {
+    return $this->sanitizePayload($data);
+    }
+
+    protected function beforeUpdate(array $data, array $criteria): array
+    {
+    return $this->sanitizePayload($data);
+    }
+
+    protected function beforeDelete($identifier): void
+    {
+    // Optional: add custom logic before deletion
+    }
+
+    protected function afterInsert($result, array $data): void
+    {
+    // Optional: add custom logic after insertion
+    }
+
+    protected function afterUpdate($result, array $data, array $criteria): void
+    {
+    // Optional: add custom logic after update
+    }
+
+    protected function afterDelete($result, $identifier): void
+    {
+    // Optional: add custom logic after deletion
+    }
+
+    protected function beforeInsertMany(array $dataSet): array
+    {
+    return array_map([$this, 'sanitizePayload'], $dataSet);
+    }
+
+    protected function afterInsertMany($results, array $dataSet): void
+    {
+    // Optional: add custom logic after bulk insertion
+    }
+
 }

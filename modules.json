@@ -1,1 +1,42 @@
-[]
+{
+    "unnovatebrains.common.student": {
+        "id": 1,
+        "module_key": "unnovatebrains.common.student",
+        "vendor": "Unnovatebrains",
+        "module": "Student",
+        "dev_port": 5175,
+        "role": "Admin",
+        "run": true,
+        "namespace": "Unnovatebrains\\Common\\Student\\Backend",
+        "root": "Unnovatebrains\/Common\/Student",
+        "app_id": "unnovatebrains_common_student_app",
+        "path": "E:\\dev-server\\www\\packages\\schoolpalm-module-sdk\\modules\\Unnovatebrains\\Common\\Student\\Backend",
+        "context": "common",
+        "manifest": "E:\\dev-server\\www\\packages\\schoolpalm-module-sdk\\modules\\Unnovatebrains\\Common\\Student\\manifest.json",
+        "folder": "Common",
+        "is_common": true,
+        "published": false,
+        "installed": false,
+        "created_at": "2026-06-14T14:40:14.110835Z"
+    },
+    "unnovatebrains.common.staff": {
+        "id": 2,
+        "module_key": "unnovatebrains.common.staff",
+        "vendor": "Unnovatebrains",
+        "module": "Staff",
+        "dev_port": 5176,
+        "role": "Admin",
+        "run": true,
+        "namespace": "Unnovatebrains\\Common\\Staff\\Backend",
+        "root": "Unnovatebrains\/Common\/Staff",
+        "app_id": "unnovatebrains_common_staff_app",
+        "path": "E:\\dev-server\\www\\packages\\schoolpalm-module-sdk\\modules\\Unnovatebrains\\Common\\Staff\\Backend",
+        "context": "common",
+        "manifest": "E:\\dev-server\\www\\packages\\schoolpalm-module-sdk\\modules\\Unnovatebrains\\Common\\Staff\\manifest.json",
+        "folder": "Common",
+        "is_common": true,
+        "published": false,
+        "installed": false,
+        "created_at": "2026-06-17T18:14:46.283045Z"
+    }
+}

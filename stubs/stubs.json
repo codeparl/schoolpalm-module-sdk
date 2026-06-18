@@ -36,6 +36,7 @@
     "routes":"index.ts.stub",
     "appRuntime":"runtime.ts.stub",
     "bootstrap":"bootstrap.js.stub",
+    "client":"client.ts.stub",
     "quasarSetup":"quasar.js.stub",
     "helper":"helper.ts.stub",
     "watchScript":"watch-modules.js.stub",

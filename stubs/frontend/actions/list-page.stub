@@ -1,0 +1,139 @@
+<template>
+  <div class="q-pa-md">
+    <q-table
+      title="{{ dtoName }}"
+      :rows="rows"
+      :columns="tableColumns"
+      row-key="id"
+      :loading="loading"
+      :rows-per-page-options="[10, 25, 50]"
+    >
+      <template #body-cell-actions="props">
+        <q-td :props="props">
+          <q-btn
+            flat
+            round
+            dense
+            icon="visibility"
+            color="info"
+            @click="viewRow(props.row)"
+            title="View"
+          />
+          <q-btn
+            flat
+            round
+            dense
+            icon="edit"
+            color="warning"
+            @click="editRow(props.row)"
+            title="Edit"
+          />
+          <q-btn
+            flat
+            round
+            dense
+            icon="delete"
+            color="negative"
+            @click="deleteRow(props.row)"
+            title="Delete"
+          />
+        </q-td>
+      </template>
+      <template #loading>
+        <q-inner-loading showing color="primary" />
+      </template>
+    </q-table>
+  </div>
+</template>
+
+<script setup lang="ts">
+import { ref, onMounted } from 'vue'
+import { useQuasar } from 'quasar'
+import axios, { AxiosError } from 'axios'
+import { useRouter } from 'vue-router'
+import type { QTableColumn } from 'quasar'
+
+interface RowData {
+  id: number | string
+  [key: string]: any
+}
+
+const $q = useQuasar()
+const router = useRouter()
+const loading = ref(false)
+const rows = ref<RowData[]>([])
+
+// Base columns from DTO
+const baseColumns: QTableColumn[] = [{{ columns }}]
+
+const actionsColumn: QTableColumn = {
+  name: 'actions',
+  label: 'Actions',
+  field: 'actions',
+  align: 'center' as const
+}
+
+const tableColumns: QTableColumn[] = [...baseColumns, actionsColumn]
+
+const fetchData = async () => {
+  loading.value = true
+  try {
+    const method = '{{ method }}'.toLowerCase() as 'get' | 'post' | 'put' | 'patch' | 'delete'
+    let response
+    if (method === 'get') {
+      response = await axios.get('{{ list_route }}')
+    } else {
+      response = await axios[method]('{{ list_route }}')
+    }
+    rows.value = response.data
+  } catch (error) {
+    const err = error as AxiosError<{ message?: string }>
+    $q.notify({
+      type: 'negative',
+      message: err.response?.data?.message || 'Failed to load list',
+      position: 'top',
+      timeout: 4000
+    })
+  } finally {
+    loading.value = false
+  }
+}
+
+const viewRow = (row: RowData) => {
+  router.push(`/{{ view_route }}/${row.id}`)
+}
+
+const editRow = (row: RowData) => {
+  router.push(`/{{ edit_route }}/${row.id}`)
+}
+
+const deleteRow = (row: RowData) => {
+  $q.dialog({
+    title: 'Confirm Delete',
+    message: `Are you sure you want to delete this {{ dtoName }}?`,
+    ok: { label: 'Delete', color: 'negative' },
+    cancel: true
+  }).onOk(async () => {
+    try {
+      await axios.delete(`{{ delete_route }}/${row.id}`)
+      $q.notify({
+        type: 'positive',
+        message: 'Deleted successfully',
+        position: 'top',
+        timeout: 3000
+      })
+      await fetchData()
+    } catch (error) {
+      const err = error as AxiosError<{ message?: string }>
+      $q.notify({
+        type: 'negative',
+        message: err.response?.data?.message || 'Delete failed',
+        position: 'top',
+        timeout: 4000
+      })
+    }
+  })
+}
+
+onMounted(fetchData)
+</script>

@@ -72,10 +72,11 @@ class ModuleScaffold
         $root .= '/Backend';
         $paths = [
             'contracts'   => "{$root}/Contracts",
-            'contracts'   => "{$root}/Contracts/Core",
+            'contracts-core'   => "{$root}/Contracts/Core",
             'facades'   => "{$root}/Facades",
             'actions'     => "{$root}/Actions",
             'services'    => "{$root}/Services",
+            'services-core'    => "{$root}/Services/core",
             'models'      => "{$root}/Models",
             'dtos'      => "{$root}/DTOs",
             'traits'   => "{$root}/Traits",

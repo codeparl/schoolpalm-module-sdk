@@ -2,7 +2,7 @@
 
 use SchoolPalm\ModuleBridge\Database\BaseMigration;
 use Illuminate\Support\Facades\Schema;
-
+use Illuminate\Database\Schema\Blueprint;
 class {{ class }} extends BaseMigration
 {
 
@@ -17,7 +17,7 @@ class {{ class }} extends BaseMigration
     }
     public function up(): void
     {
-        $this->createTable($this->tableName(), function ($table) {
+        $this->createTable($this->tableName(), function (Blueprint $table) {
 
             /*
             |--------------------------------------------------------------------------
@@ -26,6 +26,7 @@ class {{ class }} extends BaseMigration
             |
             | Add module-specific columns only.
             */
+            {{ columns }}
 
         });
     }

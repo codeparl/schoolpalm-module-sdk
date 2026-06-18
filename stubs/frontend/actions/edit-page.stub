@@ -1,0 +1,82 @@
+<template>
+  <div class="q-pa-md">
+    <q-card class="q-pa-md">
+      <div class="text-h6 q-mb-md">Edit {{ dtoName }}</div>
+      <q-form @submit="update">
+        {{ form_fields }}
+        <q-btn
+          label="Update"
+          type="submit"
+          color="primary"
+          class="q-mt-md"
+          :loading="loading"
+          :disable="loading"
+        />
+      </q-form>
+    </q-card>
+  </div>
+</template>
+
+<script setup lang="ts">
+import { ref, onMounted } from 'vue'
+import { useQuasar } from 'quasar'
+import axios, { AxiosError } from 'axios'
+import { useRoute } from 'vue-router'
+
+interface FormData {
+  [key: string]: any
+}
+
+const $q = useQuasar()
+const route = useRoute()
+const loading = ref(false)
+const form = ref<FormData>({})
+
+const fetchData = async () => {
+  loading.value = true
+  try {
+    const { data } = await axios.get(`{{ view_route }}/${route.params.id}`)
+    form.value = data
+  } catch (error) {
+    const err = error as AxiosError<{ message?: string }>
+    $q.notify({
+      type: 'negative',
+      message: err.response?.data?.message || 'Failed to load data',
+      position: 'top',
+      timeout: 4000
+    })
+  } finally {
+    loading.value = false
+  }
+}
+
+const update = async () => {
+  loading.value = true
+  try {
+    const method = '{{ method }}'.toLowerCase() as 'get' | 'post' | 'put' | 'patch' | 'delete'
+    if (method === 'get') {
+      await axios.get(`{{ update_route }}/${route.params.id}`, { params: form.value })
+    } else {
+      await axios[method](`{{ update_route }}/${route.params.id}`, form.value)
+    }
+    $q.notify({
+      type: 'positive',
+      message: 'Updated successfully',
+      position: 'top',
+      timeout: 3000
+    })
+  } catch (error) {
+    const err = error as AxiosError<{ message?: string }>
+    $q.notify({
+      type: 'negative',
+      message: err.response?.data?.message || 'Update failed',
+      position: 'top',
+      timeout: 4000
+    })
+  } finally {
+    loading.value = false
+  }
+}
+
+onMounted(fetchData)
+</script>

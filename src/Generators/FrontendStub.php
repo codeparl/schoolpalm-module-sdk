@@ -148,6 +148,15 @@ class  FrontendStub extends Stub
         return $this;
     }
 
+    public function clientApi(): FrontendStub
+    {
+        $stubPath  = $this->stubPath . '/src/' . $this->stubMap['client'];
+        $targetPath  = $this->frontendPath . 'src/' . $this->stubMap['client'];
+      
+        $this->publishStub($stubPath, $targetPath);
+        return $this;
+    }
+
     public function quasarSetup(): FrontendStub
     {
         $stubPath  = $this->stubPath . '/src/' . $this->stubMap['quasarSetup'];
@@ -275,7 +284,7 @@ class  FrontendStub extends Stub
         }
     }
 
-    protected function updateRouterStub( string $action)
+    public  function updateRouterStub( string $action)
     {
 
         $targetPath  = $this->frontendPath . 'src/router/' . Str::before($this->stubMap['routes'], '.stub');

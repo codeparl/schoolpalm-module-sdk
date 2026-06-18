@@ -15,13 +15,6 @@ class {{ class }} extends BaseModel
      * Mass assignable attributes.
      */
     protected $fillable = [
-        /*
-        |--------------------------------------------------------------------------
-        | Fillable Attributes
-        |--------------------------------------------------------------------------
-        |
-        | Add module business fields here.
-        |
-        */
-    ];
+    {{ fillable_fields }}
+];
 }

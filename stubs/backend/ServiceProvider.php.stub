@@ -30,117 +30,85 @@ class {{ class }} extends ServiceProvider
             return;
         }
 
+        $this->bindPublicContracts(
+            $modulePath,
+            $moduleNamespace
+        );
+
         $this->bindCoreContracts(
             $modulePath,
             $moduleNamespace
         );
     }
 
-    protected function bindCoreContracts(
+    /**
+     * Bind public contracts (Contracts/*) to services (Services/*)
+     */
+    protected function bindPublicContracts(
         string $modulePath,
         string $moduleNamespace
     ): void {
+        $contractsPath = $modulePath . DIRECTORY_SEPARATOR . 'Contracts';
+        $servicesPath  = $modulePath . DIRECTORY_SEPARATOR . 'Services';
 
-        $contractsPath =
-            $modulePath
-            . DIRECTORY_SEPARATOR
-            . 'Contracts'
-            . DIRECTORY_SEPARATOR
-            . 'Core';
-
-        $servicesPath =
-            $modulePath
-            . DIRECTORY_SEPARATOR
-            . 'Services'
-            . DIRECTORY_SEPARATOR
-            . 'Core';
-
-        if (
-            !is_dir($contractsPath)
-            || !is_dir($servicesPath)
-        ) {
+        if (!is_dir($contractsPath) || !is_dir($servicesPath)) {
             return;
         }
 
-        /*
-        |--------------------------------------------------------------------------
-        | STRICT FILE PAIR MATCHING
-        |--------------------------------------------------------------------------
-        |
-        | Example:
-        |
-        | IdManagerCoreContract
-        | ↔
-        | IdManagerCoreService
-        |
-        | Prevents acronym/casing corruption issues.
-        |
-        */
+        foreach (File::allFiles($contractsPath) as $contractFile) {
+            // Skip files in subdirectories (like Core)
+            if ($contractFile->getRelativePath() !== '') {
+                continue;
+            }
 
-        foreach (
-            File::allFiles($contractsPath)
-            as $contractFile
-        ) {
+            $contractClass = pathinfo($contractFile, PATHINFO_FILENAME);
 
-            $contractClass = pathinfo(
-                $contractFile,
-                PATHINFO_FILENAME
-            );
+            // Skip if not a contract (must end with 'Contract')
+            if (!str_ends_with($contractClass, 'Contract')) {
+                continue;
+            }
 
-            /*
-            |--------------------------------------------------------------------------
-            | Build Expected Service Name
-            |--------------------------------------------------------------------------
-            */
-
-            $serviceClass = str_replace(
-                'Contract',
-                'Service',
-                $contractClass
-            );
-
-            /*
-            |--------------------------------------------------------------------------
-            | Verify Service File Exists
-            |--------------------------------------------------------------------------
-            */
-
-            $serviceFile =
-                $servicesPath
-                . DIRECTORY_SEPARATOR
-                . $serviceClass
-                . '.php';
+            $serviceClass = str_replace('Contract', 'Service', $contractClass);
+            $serviceFile = $servicesPath . DIRECTORY_SEPARATOR . $serviceClass . '.php';
 
             if (!file_exists($serviceFile)) {
                 continue;
             }
 
-            /*
-            |--------------------------------------------------------------------------
-            | Build FQCNs
-            |--------------------------------------------------------------------------
-            */
+            $abstract = $moduleNamespace . '\\Contracts\\' . $contractClass;
+            $concrete = $moduleNamespace . '\\Services\\' . $serviceClass;
 
-            $abstract =
-                $moduleNamespace
-                . '\\Contracts\\Core\\'
-                . $contractClass;
+            $this->app->bind($abstract, $concrete);
+        }
+    }
 
-            $concrete =
-                $moduleNamespace
-                . '\\Services\\Core\\'
-                . $serviceClass;
+    /**
+     * Bind core contracts (Contracts/Core/*) to core services (Services/Core/*)
+     */
+    protected function bindCoreContracts(
+        string $modulePath,
+        string $moduleNamespace
+    ): void {
+        $contractsPath = $modulePath . DIRECTORY_SEPARATOR . 'Contracts' . DIRECTORY_SEPARATOR . 'Core';
+        $servicesPath  = $modulePath . DIRECTORY_SEPARATOR . 'Services' . DIRECTORY_SEPARATOR . 'Core';
 
-            /*
-            |--------------------------------------------------------------------------
-            | Bind
-            |--------------------------------------------------------------------------
-            */
+        if (!is_dir($contractsPath) || !is_dir($servicesPath)) {
+            return;
+        }
 
-            $this->app->bind(
-                $abstract,
-                $concrete
-            );
+        foreach (File::allFiles($contractsPath) as $contractFile) {
+            $contractClass = pathinfo($contractFile, PATHINFO_FILENAME);
+            $serviceClass = str_replace('Contract', 'Service', $contractClass);
+            $serviceFile = $servicesPath . DIRECTORY_SEPARATOR . $serviceClass . '.php';
+
+            if (!file_exists($serviceFile)) {
+                continue;
+            }
+
+            $abstract = $moduleNamespace . '\\Contracts\\Core\\' . $contractClass;
+            $concrete = $moduleNamespace . '\\Services\\Core\\' . $serviceClass;
+
+            $this->app->bind($abstract, $concrete);
         }
     }
 }

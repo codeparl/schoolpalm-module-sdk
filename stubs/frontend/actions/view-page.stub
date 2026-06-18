@@ -1,0 +1,55 @@
+<template>
+  <div class="q-pa-md">
+    <q-card class="q-pa-md">
+      <div class="text-h6 q-mb-md">View {{ dtoName }}</div>
+      <q-list bordered separator>
+        {{ rows }}
+      </q-list>
+      <div v-if="loading" class="text-center q-mt-md">
+        <q-spinner color="primary" size="md" />
+      </div>
+    </q-card>
+  </div>
+</template>
+
+<script setup lang="ts">
+import { ref, onMounted } from 'vue'
+import { useQuasar } from 'quasar'
+import axios, { AxiosError } from 'axios'
+import { useRoute } from 'vue-router'
+
+interface ItemData {
+  [key: string]: any
+}
+
+const $q = useQuasar()
+const route = useRoute()
+const loading = ref(false)
+const item = ref<ItemData | null>(null)
+
+const fetchData = async () => {
+  loading.value = true
+  try {
+    const method = '{{ method }}'.toLowerCase() as 'get' | 'post' | 'put' | 'patch' | 'delete'
+    let response
+    if (method === 'get') {
+      response = await axios.get(`{{ view_route }}/${route.params.id}`)
+    } else {
+      response = await axios[method](`{{ view_route }}/${route.params.id}`)
+    }
+    item.value = response.data
+  } catch (error) {
+    const err = error as AxiosError<{ message?: string }>
+    $q.notify({
+      type: 'negative',
+      message: err.response?.data?.message || 'Failed to load data',
+      position: 'top',
+      timeout: 4000
+    })
+  } finally {
+    loading.value = false
+  }
+}
+
+onMounted(fetchData)
+</script>

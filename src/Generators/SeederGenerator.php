@@ -46,7 +46,7 @@ class SeederGenerator
             if (!empty($schema['timestamps'])) {
                 $fields[] = "'created_at' => now()";
                 $fields[] = "'updated_at' => now()";
-                $fields[] = "'generated_at' => now()";
+                
 
             }
 
